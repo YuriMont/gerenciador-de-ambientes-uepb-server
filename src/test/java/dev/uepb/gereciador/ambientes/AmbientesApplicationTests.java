@@ -1,0 +1,13 @@
+package dev.uepb.gereciador.ambientes;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class AmbientesApplicationTests {
+
+	@Test
+	void contextLoads() {
+	}
+
+}
