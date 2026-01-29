@@ -6,6 +6,4 @@ import org.springframework.stereotype.Repository;
 import dev.uepb.gereciador.ambientes.entity.Environment;
 
 @Repository
-public interface EnvironmentRepository extends JpaRepository<Environment, Long> {
-    // void create(Environment environment);
-}
+public interface EnvironmentRepository extends JpaRepository<Environment, Long> {}

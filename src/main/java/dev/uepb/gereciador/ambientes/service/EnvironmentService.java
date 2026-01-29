@@ -21,7 +21,6 @@ public class EnvironmentService {
 
         environmentRepository.save(environment);
 
-        System.out.println(environment.toString());
         return environment;
     }
 }
