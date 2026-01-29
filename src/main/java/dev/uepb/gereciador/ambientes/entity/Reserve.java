@@ -1,13 +1,8 @@
 package dev.uepb.gereciador.ambientes.entity;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import dev.uepb.gereciador.ambientes.enums.UserRole;
+import dev.uepb.gereciador.ambientes.enums.ReserveStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,24 +19,33 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "users")
-public class User implements UserDetails {
+@Table(name = "reserves")
+public class Reserve {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    @Column(unique = true, nullable = false)
-    private String email;
+    @Column(name = "environment_id", nullable = false)
+    private Long environmentId;
 
     @Column(nullable = false)
-    private String password;
+    private String justification;
+
+    @Column(name = "number_of_participants", nullable = false)
+    private Integer numberOfParticipants;
+
+    @Column(name = "start_date", nullable = false)
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date", nullable = false)
+    private LocalDateTime endDate;
 
     @Enumerated(EnumType.STRING)
-    private UserRole role;
+    private ReserveStatus status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -59,16 +63,4 @@ public class User implements UserDetails {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
-    }
-
-    @Override
-    public String getUsername() {
-        // TODO Auto-generated method stub
-        return "";
-    }
-
 }
