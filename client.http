@@ -1,0 +1,38 @@
+# Variables
+@baseUrl = http://localhost:8080
+@token = {{login.response.body.$.token}}
+
+###
+
+# @name register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "João Vitor",
+  "email": "joao@mail.com",
+  "password": "joao123"
+}
+
+###
+
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@mail.com",
+  "password": "joao123"
+}
+
+###
+
+# @name createEnvironment
+POST {{baseUrl}}/environments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Ambiente teste",
+  "description": "Ambiente descrição"
+}
