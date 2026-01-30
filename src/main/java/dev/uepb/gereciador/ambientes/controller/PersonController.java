@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("person")
 @Tag(name = "person")
 @SecurityRequirement(name = "bearerAuth")
+@PreAuthorize("isAuthenticated()")
 public class PersonController {
 
     @Autowired
