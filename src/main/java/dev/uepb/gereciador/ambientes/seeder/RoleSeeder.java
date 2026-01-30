@@ -1,4 +1,4 @@
-package dev.uepb.gereciador.ambientes.sedder;
+package dev.uepb.gereciador.ambientes.seeder;
 
 import java.util.Arrays;
 import java.util.Optional;
