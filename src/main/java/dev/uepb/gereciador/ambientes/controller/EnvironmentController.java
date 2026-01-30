@@ -35,7 +35,8 @@ public class EnvironmentController {
         
         return ResponseEntity.status(HttpStatus.CREATED).body(environment);
     }
-
+    
+    @Operation(summary = "Get all environments")
     @GetMapping
     public ResponseEntity<List<Environment>> findAll() {
         List<Environment> environments = environmentService.findAll();
