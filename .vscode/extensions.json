@@ -1,0 +1,36 @@
+{
+  "recommendations": [
+    // 🌟 SPRING BOOT EXTENSION PACK (Pacote Completo)
+    "vmware.vscode-spring-boot",
+
+    // 🚀 Spring Boot Essentials (Pacote Principal)
+    "vmware.vscode-spring-initializr",
+    "vmware.vscode-boot-dev-pack",
+    "vmware.vscode-spring-boot-dashboard",
+
+    // ⚙️ Ferramentas Spring Boot
+    "vmware.tanzu-app-accelerator",
+    "pivotal.vscode-spring-boot",
+    "redhat.vscode-spring-boot-application-properties",
+
+    // 🔧 Java & Ferramentas de Desenvolvimento
+    "vscjava.vscode-java-pack", // Pacote Java completo
+    "redhat.java", // Java Language Support
+    "vscjava.vscode-java-debug", // Debugger
+    "vscjava.vscode-java-test", // Test Runner
+    "vscjava.vscode-maven", // Maven
+    "vscjava.vscode-gradle", // Gradle
+    "vscjava.vscode-java-dependency", // Gerenciador de Dependências
+
+    "esbenp.prettier-vscode", // Prettier
+    "eamodio.gitlens", // Git
+    "github.copilot" // GitHub Copilot (opcional)
+  ],
+
+  "unwantedRecommendations": [
+    // Extensões que podem causar conflito
+    "vscjava.vscode-spring-initializr-java", // Duplicada
+    "cstrap.spring-boot-snippets", // Snippets antigos
+    "sohibe.java-spring-boot-snippets" // Pode conflitar
+  ]
+}

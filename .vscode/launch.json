@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-AmbientesApplication<ambientes>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "dev.uepb.gereciador.ambientes.AmbientesApplication",
+      "projectName": "ambientes",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
