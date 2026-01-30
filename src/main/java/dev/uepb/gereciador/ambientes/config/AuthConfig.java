@@ -1,6 +1,8 @@
 package dev.uepb.gereciador.ambientes.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,6 +22,17 @@ public class AuthConfig implements UserDetailsService {
         return userRepository
                 .findUserByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username));
+    }
+
+    public String getLoggedUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object authObject = authentication.getPrincipal();
+
+        if (authObject instanceof JWTUserData) {
+            return ((JWTUserData) authObject).email();
+        } else {
+            return "";
+        }
     }
 
 }

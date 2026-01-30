@@ -7,18 +7,23 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import dev.uepb.gereciador.ambientes.config.AuthConfig;
 import dev.uepb.gereciador.ambientes.config.TokenConfig;
 import dev.uepb.gereciador.ambientes.dto.response.LoginResponse;
 import dev.uepb.gereciador.ambientes.dto.response.RegisterUserResponse;
+import dev.uepb.gereciador.ambientes.dto.response.UserResponse;
 import dev.uepb.gereciador.ambientes.dto.resquest.LoginRequest;
 import dev.uepb.gereciador.ambientes.dto.resquest.RegisterUserRequest;
 import dev.uepb.gereciador.ambientes.entity.User;
 import dev.uepb.gereciador.ambientes.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -35,6 +40,9 @@ public class AuthController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private AuthConfig authConfig;
 
     @Autowired
     private TokenConfig tokenConfig;
@@ -68,6 +76,14 @@ public class AuthController {
                 .body(new RegisterUserResponse(
                         newUser.getName(),
                         newUser.getEmail()));
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Obter dados do usuário atual", description = "Retorna os dados do usuário autenticado (requer token JWT)", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        User user = (User) authConfig.loadUserByUsername(authConfig.getLoggedUsername());
+
+        return ResponseEntity.status(HttpStatus.OK).body(new UserResponse(user.getName(), user.getEmail()));
     }
 
 }
