@@ -1,5 +1,7 @@
 package dev.uepb.gereciador.ambientes.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,5 +24,9 @@ public class EnvironmentService {
         environmentRepository.save(environment);
 
         return environment;
+    }
+
+    public List<Environment> findAll() {
+        return environmentRepository.findAll();
     }
 }
