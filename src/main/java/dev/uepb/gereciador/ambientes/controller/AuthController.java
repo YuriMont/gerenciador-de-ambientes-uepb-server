@@ -7,23 +7,20 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import dev.uepb.gereciador.ambientes.config.AuthConfig;
 import dev.uepb.gereciador.ambientes.config.TokenConfig;
 import dev.uepb.gereciador.ambientes.dto.response.LoginResponse;
 import dev.uepb.gereciador.ambientes.dto.response.RegisterUserResponse;
-import dev.uepb.gereciador.ambientes.dto.response.UserResponse;
 import dev.uepb.gereciador.ambientes.dto.resquest.LoginRequest;
 import dev.uepb.gereciador.ambientes.dto.resquest.RegisterUserRequest;
+import dev.uepb.gereciador.ambientes.entity.Role;
 import dev.uepb.gereciador.ambientes.entity.User;
+import dev.uepb.gereciador.ambientes.enums.UserRole;
+import dev.uepb.gereciador.ambientes.repository.RoleRepository;
 import dev.uepb.gereciador.ambientes.repository.UserRepository;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -32,58 +29,51 @@ import jakarta.validation.Valid;
 @Tag(name = "auth")
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+        @Autowired
+        private RoleRepository roleRepository;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+        @Autowired
+        private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private AuthConfig authConfig;
+        @Autowired
+        private AuthenticationManager authenticationManager;
 
-    @Autowired
-    private TokenConfig tokenConfig;
+        @Autowired
+        private TokenConfig tokenConfig;
 
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        @PostMapping("/login")
+        public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 
-        UsernamePasswordAuthenticationToken userAndPass = new UsernamePasswordAuthenticationToken(request.email(),
-                request.password());
+                UsernamePasswordAuthenticationToken userAndPass =
+                                new UsernamePasswordAuthenticationToken(request.email(),
+                                                request.password());
 
-        Authentication authentication = authenticationManager.authenticate(userAndPass);
+                Authentication authentication = authenticationManager.authenticate(userAndPass);
 
-        User user = (User) authentication.getPrincipal();
+                User user = (User) authentication.getPrincipal();
 
-        String token = tokenConfig.generateToken(user);
+                String token = tokenConfig.generateToken(user);
 
-        return ResponseEntity.ok(new LoginResponse(token));
-    }
+                return ResponseEntity.ok(new LoginResponse(token));
+        }
 
-    @PostMapping("/register")
-    public ResponseEntity<RegisterUserResponse> register(@Valid @RequestBody RegisterUserRequest request) {
-        User newUser = new User();
-        newUser.setPassword(passwordEncoder.encode(request.password()));
-        newUser.setName(request.name());
-        newUser.setEmail(request.email());
+        @PostMapping("/register")
+        public ResponseEntity<RegisterUserResponse> register(
+                        @Valid @RequestBody RegisterUserRequest request) {
+                Role role = roleRepository.findByName(UserRole.USER).orElseThrow();
 
-        userRepository.save(newUser);
+                User newUser = new User();
+                newUser.setPassword(passwordEncoder.encode(request.password()));
+                newUser.setName(request.name());
+                newUser.setEmail(request.email());
+                newUser.setRole(role);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new RegisterUserResponse(
-                        newUser.getName(),
-                        newUser.getEmail()));
-    }
+                userRepository.save(newUser);
 
-    @GetMapping("/me")
-    @Operation(summary = "Obter dados do usuário atual", description = "Retorna os dados do usuário autenticado (requer token JWT)", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<UserResponse> getCurrentUser() {
-        User user = (User) authConfig.loadUserByUsername(authConfig.getLoggedUsername());
-
-        return ResponseEntity.status(HttpStatus.OK).body(new UserResponse(user.getName(), user.getEmail()));
-    }
-
+                return ResponseEntity.status(HttpStatus.CREATED).body(
+                                new RegisterUserResponse(newUser.getName(), newUser.getEmail()));
+        }
 }
