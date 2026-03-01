@@ -1,6 +1,7 @@
 package dev.uepb.gereciador.ambientes.controller;
 
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+
 import dev.uepb.gereciador.ambientes.dto.resquest.SaveEnvironmentRequest;
 import dev.uepb.gereciador.ambientes.entity.Environment;
 import dev.uepb.gereciador.ambientes.service.EnvironmentService;
@@ -37,10 +39,9 @@ public class EnvironmentController {
 
     @Operation(summary = "Update a environment")
     @PutMapping("/{environmentId}")
-    public ResponseEntity<Environment> update(@PathVariable Long environmentId,
+    public ResponseEntity<Environment> update(@PathVariable String environmentId,
             @Valid @RequestBody SaveEnvironmentRequest createEnvironmentRequest) {
-        Environment environment =
-                environmentService.update(environmentId, createEnvironmentRequest);
+        Environment environment = environmentService.update(environmentId, createEnvironmentRequest);
 
         return ResponseEntity.ok(environment);
     }

@@ -1,24 +1,18 @@
 package dev.uepb.gereciador.ambientes.entity;
 
 import java.sql.Date;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 import dev.uepb.gereciador.ambientes.enums.UserRole;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
-@Table(name = "roles")
+@Document(collection = "roles")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,18 +20,14 @@ import lombok.Setter;
 public class Role {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(unique = true, nullable = false)
+    @Indexed(unique = true)
     private UserRole name;
 
-    @CreationTimestamp
-    @Column(updatable = false, name = "created_at")
+    @CreatedDate
     private Date createAt;
 
-    @UpdateTimestamp
-    @Column(name = "update_at")
+    @LastModifiedDate
     private Date updateAt;
 }
