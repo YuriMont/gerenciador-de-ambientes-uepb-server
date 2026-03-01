@@ -1,6 +1,6 @@
 package dev.uepb.gereciador.ambientes.entity;
 
-import java.sql.Date;
+import java.time.Instant;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -26,8 +26,8 @@ public class Role {
     private UserRole name;
 
     @CreatedDate
-    private Date createAt;
+    private Instant createAt;
 
     @LastModifiedDate
-    private Date updateAt;
+    private Instant updateAt;
 }

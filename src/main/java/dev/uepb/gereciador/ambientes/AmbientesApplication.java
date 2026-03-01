@@ -3,8 +3,10 @@ package dev.uepb.gereciador.ambientes;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.data.mongodb.config.EnableMongoAuditing;
 
 
+@EnableMongoAuditing
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class AmbientesApplication {
 
