@@ -1,9 +1,11 @@
 package dev.uepb.gereciador.ambientes.service;
 
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import dev.uepb.gereciador.ambientes.dto.resquest.RegisterUserRequest;
 import dev.uepb.gereciador.ambientes.entity.Role;
 import dev.uepb.gereciador.ambientes.entity.User;
@@ -33,7 +35,7 @@ public class PersonService {
 
         User user = new User();
 
-        user.setEmail(input.email());
+        user.setName(input.name());
         user.setEmail(input.email());
         user.setPassword(passwordEncoder.encode(input.password()));
         user.setRole(role);
