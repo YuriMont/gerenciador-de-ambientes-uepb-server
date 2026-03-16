@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
+import io.github.cdimascio.dotenv.Dotenv;
 
 
 @EnableMongoAuditing
@@ -11,6 +12,9 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing;
 public class AmbientesApplication {
 
 	public static void main(String[] args) {
+		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+		dotenv.entries().forEach(env -> System.setProperty(env.getKey(), env.getValue()));
+
 		SpringApplication.run(AmbientesApplication.class, args);
 	}
 
