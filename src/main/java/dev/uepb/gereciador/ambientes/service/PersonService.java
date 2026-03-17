@@ -33,7 +33,7 @@ public class PersonService {
 
         User user = new User();
 
-        user.setEmail(input.email());
+        user.setName(input.name());
         user.setEmail(input.email());
         user.setPassword(passwordEncoder.encode(input.password()));
         user.setRole(role);
