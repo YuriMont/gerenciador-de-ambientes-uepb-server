@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 import dev.uepb.gereciador.ambientes.dto.ReserveSlot;
 import dev.uepb.gereciador.ambientes.enums.ReserveStatus;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Document(collection = "reserves")
@@ -46,6 +47,7 @@ public class Reserve {
 
     @Getter
     @Setter
+    @NoArgsConstructor
     public static class Slot {
         private LocalTime startTime;
         private LocalTime endTime;
