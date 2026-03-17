@@ -1,0 +1,50 @@
+@baseUrl = http://localhost:8080
+@token = {{login.response.body.$.token}}
+@environmentId = {{createEnvironment.response.body.$.id}}
+
+###
+
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "password": "1234"
+}
+
+###
+
+# @name createEnvironment
+POST {{baseUrl}}/environments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Auditório",
+  "description": "descvnfjvfh"
+}
+
+###
+
+GET {{baseUrl}}/environments
+Authorization: Bearer {{token}}
+
+###
+
+POST {{baseUrl}}/reserves
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "date": "2026-03-17",
+  "environmentId": "{{environmentId}}",
+  "justification": "descvnfjvfh",
+  "numberOfParticipants": 10,
+  "slots": [
+    {
+      "startTime": "09:00",
+      "endTime": "10:00"
+    }
+  ]
+}
