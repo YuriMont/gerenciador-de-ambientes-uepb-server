@@ -21,7 +21,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "name": "Auditório",
+  "name": "Laboratório",
   "description": "descvnfjvfh"
 }
 
@@ -43,8 +43,13 @@ Authorization: Bearer {{token}}
   "numberOfParticipants": 10,
   "slots": [
     {
-      "startTime": "09:00",
-      "endTime": "10:00"
+      "startTime": "08:00",
+      "endTime": "09:00"
     }
   ]
 }
+
+###
+
+GET {{baseUrl}}/reserves/{{environmentId}}?date=2026-03-17
+Authorization: Bearer {{token}}
