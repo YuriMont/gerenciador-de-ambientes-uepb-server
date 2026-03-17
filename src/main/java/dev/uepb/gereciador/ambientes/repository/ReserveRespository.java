@@ -7,4 +7,6 @@ import dev.uepb.gereciador.ambientes.entity.Reserve;
 
 public interface ReserveRespository extends MongoRepository<Reserve, String> {
     List<Reserve> findAllByEnvironmentIdAndDate(String environmentId, LocalDate date);
+
+    List<Reserve> findAllByUserId(String userId);
 }

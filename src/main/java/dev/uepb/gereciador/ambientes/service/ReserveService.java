@@ -100,4 +100,8 @@ public class ReserveService {
                 reservedSlot -> reservedSlot.getStartTime().equals(unreservedSlot.getStartTime())))
                 .toList();
     }
+
+    public List<Reserve> getReservesByUserId(String userId) {
+        return reserveRespository.findAllByUserId(userId);
+    }
 }

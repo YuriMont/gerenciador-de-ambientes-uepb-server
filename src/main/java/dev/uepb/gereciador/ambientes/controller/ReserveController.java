@@ -59,4 +59,14 @@ public class ReserveController {
 
         return ResponseEntity.ok(reservesPerDay);
     }
+
+    @Operation(summary = "Get a reserves per user")
+    @GetMapping("/me")
+    public ResponseEntity<List<Reserve>> getReservesByUserId() {
+        User user = (User) authConfig.loadUserByUsername(authConfig.getLoggedUsername());
+
+        List<Reserve> reservesByUserId = reserveService.getReservesByUserId(user.getId());
+
+        return ResponseEntity.ok(reservesByUserId);
+    }
 }

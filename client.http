@@ -53,3 +53,8 @@ Authorization: Bearer {{token}}
 
 GET {{baseUrl}}/reserves/{{environmentId}}?date=2026-03-17
 Authorization: Bearer {{token}}
+
+###
+
+GET {{baseUrl}}/reserves/me
+Authorization: Bearer {{token}}
