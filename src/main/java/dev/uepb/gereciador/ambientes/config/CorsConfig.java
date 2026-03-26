@@ -10,7 +10,7 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost:5173", "http://localhost:3000",
-                        "https://gerenciador-de-ambientes-uepb-server.onrender.com/")
+                        "https://gerenciador-de-ambientes-uepb-server.onrender.com")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "TRACE",
                         "CONNECT")
                 .allowedHeaders("*");
