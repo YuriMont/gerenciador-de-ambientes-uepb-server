@@ -1,6 +1,7 @@
 package dev.uepb.gereciador.ambientes.config;
 
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -26,6 +27,9 @@ import io.swagger.v3.oas.models.servers.Server;
  */
 @Configuration
 public class SpringDocConfig {
+
+        @Value("${api.server.url}")
+        private String serverUrl;
 
         /**
          * Configura o objeto {@link OpenAPI} com as metainformações da API.
@@ -58,7 +62,9 @@ public class SpringDocConfig {
                                                 """)
                                 .license(new License().name("MIT License")
                                                 .url("https://opensource.org/licenses/MIT")))
-                                .servers(List.of(new Server().url("http://localhost:8080")
-                                                .description("Servidor local de desenvolvimento")));
+                                .servers(List.of(new Server()
+            .url(serverUrl)
+            .description("Servidor atual")
+        ));
         }
 }
