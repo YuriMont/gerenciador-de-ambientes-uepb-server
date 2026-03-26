@@ -4,12 +4,14 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import dev.uepb.gereciador.ambientes.dto.resquest.SaveEnvironmentRequest;
 import dev.uepb.gereciador.ambientes.entity.Environment;
@@ -41,6 +43,22 @@ public class EnvironmentController {
             @Valid @RequestBody SaveEnvironmentRequest createEnvironmentRequest) {
         Environment environment =
                 environmentService.update(environmentId, createEnvironmentRequest);
+
+        return ResponseEntity.ok(environment);
+    }
+
+    @Operation(summary = "Delete a environment")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{environmentId}")
+    public void delete(@PathVariable String environmentId) {
+        environmentService.deleteById(environmentId);
+    }
+
+    @Operation(summary = "Get a environment by id")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @GetMapping("/{environmentId}")
+    public ResponseEntity<Environment> findById(@PathVariable String environmentId) {
+        Environment environment = environmentService.findById(environmentId);
 
         return ResponseEntity.ok(environment);
     }
