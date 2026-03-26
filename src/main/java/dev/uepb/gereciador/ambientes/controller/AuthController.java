@@ -32,10 +32,12 @@ import jakarta.validation.Valid;
 /**
  * Controller responsável pelos endpoints públicos de autenticação e registro de usuários.
  *
- * <p>Não requer autenticação prévia. Os endpoints disponíveis são:</p>
+ * <p>
+ * Não requer autenticação prévia. Os endpoints disponíveis são:
+ * </p>
  * <ul>
- *   <li>{@code POST /auth/login} — autentica credenciais e retorna um token JWT</li>
- *   <li>{@code POST /auth/register} — registra um novo usuário com perfil USER</li>
+ * <li>{@code POST /auth/login} — autentica credenciais e retorna um token JWT</li>
+ * <li>{@code POST /auth/register} — registra um novo usuário com perfil USER</li>
  * </ul>
  *
  * @author Gerenciador de Ambientes UEPB
@@ -64,22 +66,23 @@ public class AuthController {
     /**
      * Autentica um usuário com e-mail e senha e retorna um token JWT.
      *
-     * <p>O token gerado tem validade de 4 horas e deve ser incluído nas
-     * demais requisições autenticadas no header {@code Authorization: Bearer {token}}.</p>
+     * <p>
+     * O token gerado tem validade de 4 horas e deve ser incluído nas demais requisições
+     * autenticadas no header {@code Authorization: Bearer {token}}.
+     * </p>
      *
      * @param request DTO com e-mail e senha do usuário
      * @return {@code 200 OK} com o token JWT em caso de sucesso
      */
-    @Operation(
-        summary = "Realizar login",
-        description = "Autentica o usuário com e-mail e senha. Retorna um token JWT válido por 4 horas."
-    )
+    @Operation(summary = "Realizar login",
+            description = "Autentica o usuário com e-mail e senha. Retorna um token JWT válido por 4 horas.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Login realizado com sucesso",
-            content = @Content(schema = @Schema(implementation = LoginResponse.class))),
-        @ApiResponse(responseCode = "401", description = "Credenciais inválidas", content = @Content),
-        @ApiResponse(responseCode = "422", description = "Dados de entrada inválidos", content = @Content)
-    })
+            @ApiResponse(responseCode = "200", description = "Login realizado com sucesso",
+                    content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Credenciais inválidas",
+                    content = @Content),
+            @ApiResponse(responseCode = "422", description = "Dados de entrada inválidos",
+                    content = @Content)})
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         UsernamePasswordAuthenticationToken userAndPass =
@@ -95,24 +98,30 @@ public class AuthController {
     /**
      * Registra um novo usuário com perfil {@code USER} no sistema.
      *
-     * <p>O e-mail deve ser único. A senha é armazenada com hash BCrypt.</p>
+     * <p>
+     * O e-mail deve ser único. A senha é armazenada com hash BCrypt.
+     * </p>
      *
      * @param request DTO com nome, e-mail e senha do novo usuário
      * @return {@code 201 Created} com nome e e-mail do usuário criado
      */
-    @Operation(
-        summary = "Registrar novo usuário",
-        description = "Cria um novo usuário com perfil USER. O e-mail deve ser único no sistema."
-    )
+    @Operation(summary = "Registrar novo usuário",
+            description = "Cria um novo usuário com perfil USER. O e-mail deve ser único no sistema.")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Usuário registrado com sucesso",
-            content = @Content(schema = @Schema(implementation = RegisterUserResponse.class))),
-        @ApiResponse(responseCode = "409", description = "E-mail já cadastrado", content = @Content),
-        @ApiResponse(responseCode = "422", description = "Dados de entrada inválidos", content = @Content)
-    })
+            @ApiResponse(responseCode = "201", description = "Usuário registrado com sucesso",
+                    content = @Content(
+                            schema = @Schema(implementation = RegisterUserResponse.class))),
+            @ApiResponse(responseCode = "409", description = "E-mail já cadastrado",
+                    content = @Content),
+            @ApiResponse(responseCode = "422", description = "Dados de entrada inválidos",
+                    content = @Content)})
     @PostMapping("/register")
     public ResponseEntity<RegisterUserResponse> register(
             @Valid @RequestBody RegisterUserRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
         Role role = roleRepository.findByName(UserRole.USER).orElseThrow();
 
         User newUser = new User();
