@@ -65,4 +65,12 @@ public class EnvironmentService {
     public List<Environment> findAll() {
         return environmentRepository.findAll();
     }
+
+    public Environment findById(String environmentId) {
+        return environmentRepository.findById(environmentId).orElse(null);
+    }
+
+    public void deleteById(String environmentId) {
+        environmentRepository.deleteById(environmentId);
+    }
 }

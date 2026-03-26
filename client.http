@@ -32,6 +32,27 @@ Authorization: Bearer {{token}}
 
 ###
 
+PUT {{baseUrl}}/environments/{{environmentId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Laboratório atualizado",
+  "description": "descvnfjvfh"
+}
+
+###
+
+GET {{baseUrl}}/environments/{{environmentId}}
+Authorization: Bearer {{token}}
+
+###
+
+DELETE {{baseUrl}}/environments/{{environmentId}}
+Authorization: Bearer {{token}}
+
+###
+
 POST {{baseUrl}}/reserves
 Content-Type: application/json
 Authorization: Bearer {{token}}
