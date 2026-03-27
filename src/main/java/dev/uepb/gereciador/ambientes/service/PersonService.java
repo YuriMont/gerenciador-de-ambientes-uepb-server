@@ -14,8 +14,10 @@ import dev.uepb.gereciador.ambientes.repository.UserRepository;
 /**
  * Serviço responsável pela lógica de negócio relacionada à gestão de usuários (pessoas).
  *
- * <p>Provê operações de consulta e criação de usuários, incluindo a criação especial
- * de administradores, que só pode ser executada por um owner do sistema.</p>
+ * <p>
+ * Provê operações de consulta e criação de usuários, incluindo a criação especial de
+ * administradores, que só pode ser executada por um owner do sistema.
+ * </p>
  *
  * @author Gerenciador de Ambientes UEPB
  * @since 1.0
@@ -35,7 +37,9 @@ public class PersonService {
     /**
      * Retorna a lista de todos os usuários cadastrados no sistema.
      *
-     * <p>Este método é restrito a usuários com perfil {@code ADMIN} ou {@code OWNER}.</p>
+     * <p>
+     * Este método é restrito a usuários com perfil {@code ADMIN} ou {@code OWNER}.
+     * </p>
      *
      * @return lista de todos os {@link User} cadastrados
      */
@@ -46,14 +50,20 @@ public class PersonService {
     /**
      * Cria um novo usuário com perfil de administrador ({@link UserRole#ADMIN}).
      *
-     * <p>A senha é automaticamente codificada com BCrypt antes de ser persistida.
-     * Esta operação é exclusiva para usuários com perfil {@code OWNER}.</p>
+     * <p>
+     * A senha é automaticamente codificada com BCrypt antes de ser persistida. Esta operação é
+     * exclusiva para usuários com perfil {@code OWNER}.
+     * </p>
      *
      * @param input DTO contendo nome, e-mail e senha do novo administrador
      * @return o usuário administrador criado e persistido
      * @throws java.util.NoSuchElementException se o papel ADMIN não existir no banco de dados
      */
     public User createAdministrator(RegisterUserRequest input) {
+        if (userRepository.existsByEmail(input.email())) {
+            throw new RuntimeException("E-mail já cadastrado");
+        }
+
         Role role = roleRepository.findByName(UserRole.ADMIN).orElseThrow();
 
         User user = new User();
@@ -63,5 +73,6 @@ public class PersonService {
         user.setRole(role);
 
         return userRepository.save(user);
+
     }
 }
