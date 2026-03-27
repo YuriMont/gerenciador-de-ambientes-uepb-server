@@ -66,10 +66,21 @@ public class EnvironmentService {
         return environmentRepository.findAll();
     }
 
+    /**
+     * Busca um ambiente pelo seu ID.
+     *
+     * @param environmentId o ID do ambiente a ser buscado
+     * @return o {@link Environment} encontrado, ou {@code null} se não existir
+     */
     public Environment findById(String environmentId) {
         return environmentRepository.findById(environmentId).orElse(null);
     }
 
+    /**
+     * Remove um ambiente pelo seu ID.
+     *
+     * @param environmentId o ID do ambiente a ser deletado
+     */
     public void deleteById(String environmentId) {
         environmentRepository.deleteById(environmentId);
     }
