@@ -99,11 +99,13 @@ A especificação OpenAPI (JSON) está disponível em:
 
 #### Ambientes (`/environments`)
 
-| Método | Rota                 | Descrição                | Acesso      |
-| ------ | -------------------- | ------------------------ | ----------- |
-| `GET`  | `/environments`      | Lista todos os ambientes | Autenticado |
-| `POST` | `/environments`      | Cria novo ambiente       | Autenticado |
-| `PUT`  | `/environments/{id}` | Atualiza um ambiente     | Autenticado |
+| Método   | Rota                 | Descrição                  | Acesso      |
+| -------- | -------------------- | -------------------------- | ----------- |
+| `GET`    | `/environments`      | Lista todos os ambientes   | Autenticado |
+| `GET`    | `/environments/{id}` | Busca ambiente pelo ID     | Autenticado |
+| `POST`   | `/environments`      | Cria novo ambiente         | Autenticado |
+| `PUT`    | `/environments/{id}` | Atualiza um ambiente       | Autenticado |
+| `DELETE` | `/environments/{id}` | Deleta um ambiente pelo ID | Autenticado |
 
 #### Reservas (`/reserves`)
 
