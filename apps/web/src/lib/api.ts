@@ -1,7 +1,7 @@
 import Axios, { type AxiosRequestConfig, AxiosError } from "axios";
 
 export const api = Axios.create({
-  baseURL: import.meta.env.API_URL,
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 // Request interceptor for auth

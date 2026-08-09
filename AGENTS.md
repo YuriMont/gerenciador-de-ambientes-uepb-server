@@ -6,84 +6,117 @@ Guia para agentes de IA que trabalham neste repositório (monorepo do **Gerencia
 
 Plataforma de **gerenciamento e reserva de ambientes físicos** da Universidade Estadual da Paraíba (UEPB).
 
-- Usuários solicitam reservas de salas/laboratórios em slots de 1h (08h–22h).
+- Usuários solicitam reservas de salas/laboratórios em slots de 1 h (08h–22h).
 - Reservas nascem com status `PENDING` e aguardam aprovação de um administrador.
-- Perfis de acesso: `USER`, `ADMIN`, `OWNER` (papéis criados automaticamente pelo `RoleSeeder`).
+- Perfis de acesso: `USER`, `ADMIN`, `OWNER` (criados automaticamente pelo `RoleSeeder`).
+
+## Estado atual — leia antes de planejar
+
+Não presuma que existe o que ainda não foi construído:
+
+| Parte | Situação |
+| ----- | -------- |
+| `apps/server/` | **Funcional.** Auth JWT, CRUD de ambientes, criação de reservas, consulta de disponibilidade. **Não existe** endpoint para aprovar/recusar: `ReserveStatus` tem `APPROVED`/`REJECTED`, mas nada muda o status depois de criado. |
+| `apps/web/` | **Esqueleto.** Só há `App.tsx` (página do template do Vite), `components/ui/button.tsx` e `lib/{api,queryClient,utils}.ts`. **Não há rotas, telas, nem `src/generated/`** — a pasta do orval só aparece depois de rodar `npm run generate:api`. |
+| `design/prototype.pen` | **Protótipo completo**, 14 telas (8 desktop + 6 mobile). É a especificação visual do que falta em `apps/web/`. |
 
 ## Estrutura do monorepo
 
 ```
-apps/               # Aplicações do monorepo
+apps/
 ├── server/         # Backend Spring Boot (Java 21) + MongoDB
 └── web/            # Frontend (Vite + React + TypeScript)
+design/             # prototype.pen — protótipo de UI e design system
+graphify-out/       # Grafo de conhecimento do repositório
 .github/            # (a criar) CI/CD
-.agents/            # Skills instaladas (find-skills, frontend-design)
-.claude/            # Espelho das skills para Claude Code
-.vscode/            # Configurações de editor (formatação, launch.json, extensões)
+.agents/skills/     # Skills instaladas (fonte primária)
+.claude/skills/     # Espelho para o Claude Code
+.vscode/            # Formatação, launch.json, extensões
 ```
 
 ### `apps/server/` — Backend Spring Boot
 
-- **Java 21**, **Spring Boot 4.x** (parent `spring-boot-starter-parent` 4.0.1), **Maven** (wrapper `./mvnw`).
-- Persistência **MongoDB** (Spring Data), autenticação **JWT** (Auth0 `java-jwt`, expiração 4h), senhas **BCrypt**.
-- Documentação via **SpringDoc/OpenAPI** (Swagger UI em `/swagger-ui.html`).
-- Lombok (getters/setters/records), `dotenv-java` para carregar `apps/server/.env`.
+- **Java 21**, **Spring Boot 4.x** (parent 4.0.1), **Maven** (wrapper `./mvnw`).
+- **MongoDB** (Spring Data), **JWT** (Auth0 `java-jwt`, 4 h), senhas **BCrypt**.
+- **SpringDoc/OpenAPI** — Swagger UI em `/swagger-ui.html`, JSON em `/v3/api-docs`.
+- Lombok, `dotenv-java` para carregar `apps/server/.env`.
 - Pacote base: `dev.uepb.gereciador.ambientes`.
 
-`apps/server/.env.example` documenta as variáveis necessárias (`SECRET`, `API_SERVER_URL`, `APP_PROFILE`, `MONGODB_URI`).
+### `apps/web/` — Frontend
 
-### `apps/web/` — Frontend (Vite + React + TypeScript)
-
-- **Vite 8**, **React 19**, **TypeScript 6**, Tailwind CSS 4 (`@tailwindcss/vite`).
-- Client HTTP: **axios** + **@tanstack/react-query**; estado leve via **jotai**; formulários validados com **zod**.
-- Geração de código da API com **orval** (`npm run generate:api` em `apps/web`) a partir do OpenAPI do backend.
-- UI components via **shadcn** (`components.json`), utilitário `cn` em `src/lib/utils.ts`.
-- **⚠️ NÃO editar manualmente `src/generated/`**: a pasta `apps/web/src/generated/` (client `react-query` + schemas zod) é **gerada automaticamente** pelo orval e sobrescrita a cada `npm run generate:api`. Alterações manuais são perdidas. Qualquer ajuste deve ser feito na fonte (backend OpenAPI) ou via `override`/`mutator` no `orval.config.ts`.
-- **🔒 Toda modificação no frontend feita por um agente exige** rodar, em `apps/web/`:
+- **Vite 8**, **React 19**, **TypeScript 6**, **Tailwind CSS 4** (`@tailwindcss/vite`).
+- **axios** + **@tanstack/react-query**; estado leve com **jotai**; validação com **zod**.
+- **shadcn/ui** (`components.json`, estilo `radix-nova`, base `neutral`, ícones lucide), utilitário `cn` em `src/lib/utils.ts`.
+- Client da API gerado por **orval** (`npm run generate:api`) a partir do OpenAPI do backend.
+- **⚠️ NÃO editar `src/generated/`**: o orval roda com `clean: true` e reescreve a pasta inteira. Ajuste a fonte (anotações OpenAPI no backend) ou o `override`/`mutator` do `orval.config.ts`.
+- **🔒 Toda modificação no frontend feita por um agente exige**, em `apps/web/`:
   ```bash
   npm run typecheck   # tsc -b --noEmit
   npm run format      # prettier --check (use `format:fix` para corrigir)
   ```
-  Só finalizar a tarefa com typecheck **sem erros** e código **formatado** (ou, caso a formatação seja corrigida por `format:fix`, o `format` voltar a passar).
+  Só finalizar com typecheck **sem erros** e código **formatado**.
+
+## Design — `design/prototype.pen`
+
+O protótipo é a referência para qualquer trabalho de UI no `apps/web/`.
+
+- **Nunca use `Read`, `Grep` ou editor de texto em arquivos `.pen`** — são criptografados. Use as ferramentas MCP do Pencil (`get_app_state`, `execute`, `get_screenshot`, `export_html`).
+- Antes de qualquer operação, chame `get_app_state({ include_schema: true, include_canvas_design: true, include_scripts_and_shaders: false })` para carregar o schema.
+- Ao alterar o protótipo, verifique o resultado com `get_screenshot` e cheque nós clipados/colapsados com um visitor `Get((n,c) => c.problems && ...)`.
+
+### Telas existentes
+
+- **Desktop (1440×860):** Entrar, Início, Ambientes, Novo ambiente, Reservar ambiente, Minhas reservas, Aprovar reservas, Usuários.
+- **Mobile (390×844):** Entrar, Ambientes, Horários do ambiente, Revisar solicitação, Minhas reservas, Aprovar reservas.
+- **Componentes:** folha de design system + `Mobile / Status bar`, `Mobile / Tab bar` e `App / Avatar do usuário` (reutilizáveis).
+
+### Convenções do design
+
+Espelham o `apps/web/src/index.css` — base *neutral* do shadcn, Inter, raio 10 px:
+
+- Cores vêm de **variáveis do arquivo** (`$ink`, `$body`, `$muted`, `$line`, `$surface`, `$canvas`, `$accent`, `$accent-strong`, `$accent-soft`, `$green`, `$amber`, `$red` e os `-soft`). Não introduza hex solto.
+- **Badges de status e perfil**: fundo suave + texto forte + ponto colorido. Ação destrutiva é fundo suave, nunca botão sólido vermelho.
+- **Header da aplicação**: 72 px, fundo branco com hairline na base. À esquerda o título da página; à direita `ação primária · notificações │ conta`. **Busca não fica no header** — vai junto da lista que ela filtra.
+- **Slots** de 1 h têm quatro estados: livre, selecionado, reservado e encerrado (horário já passado no dia de hoje).
 
 ## Requisitos de ambiente
 
-| Ferramenta | Versão  | Obrigatório |
-| ---------- | ------- | ----------- |
-| JDK        | 21      | Sim         |
-| Maven      | 3.x     | Sim (ou usar `./mvnw`) |
-| Node.js    | >= 20   | Somente para scripts raiz/web |
-| MongoDB    | 6+      | Sim (local ou Atlas) |
+| Ferramenta | Versão | Obrigatório |
+| ---------- | ------ | ----------- |
+| JDK        | 21     | Sim |
+| Maven      | 3.x    | Sim (ou `./mvnw`) |
+| Node.js    | >= 20  | Para scripts da raiz e do web |
+| MongoDB    | 6+     | Sim (local ou Atlas) |
 
 ## Como rodar
 
-### Backend (apps/server/)
+### Backend (`apps/server/`)
 ```bash
 cd apps/server
-./mvnw spring-boot:run        # sobe em http://localhost:8080
-./mvnw test                   # testes unitários (Mockito)
-./mvnw clean package -DskipTests   # build do JAR (Dockerfile usa este comando)
+./mvnw spring-boot:run             # http://localhost:8080
+./mvnw test                        # testes
+./mvnw clean package -DskipTests   # build do JAR (usado pelo Dockerfile)
 ```
 
-### Frontend (apps/web/)
+### Frontend (`apps/web/`)
 ```bash
 cd apps/web
-npm run dev        # sobe em http://localhost:5173
-npm run build      # typecheck (tsc -b) + build (vite build)
-npm run generate:api   # gera client da API (orval) a partir do OpenAPI
+npm run dev            # http://localhost:5173
+npm run build          # tsc -b + vite build
+npm run generate:api   # gera o client da API (orval)
 ```
 
-### Raiz (monorepo)
+### Raiz
 ```bash
-npm install        # instala `concurrently`
-npm run dev        # roda server + web juntos (web precisa existir)
-npm run dev:server # apenas o backend (hot-reload via DevTools + auto-build do VS Code)
-npm run dev:web    # apenas o frontend
+npm install        # instala o concurrently
+npm run dev        # server + web juntos
+npm run dev:server # só o backend (hot-reload via DevTools)
+npm run dev:web    # só o frontend
 ```
 
-## Variáveis de ambiente (apps/server/.env)
+## Variáveis de ambiente
 
-O backend lê `apps/server/.env` de duas formas: via `spring.config.import=optional:file:.env[.properties]` e via `dotenv-java` no `main`. O working directory deve ser `apps/server/`.
+**`apps/server/.env`** — lido via `spring.config.import=optional:file:.env[.properties]` e via `dotenv-java` no `main`. O diretório de trabalho **precisa** ser `apps/server/`.
 
 ```bash
 SECRET=chave-longa-aleatoria       # assinatura JWT (obrigatória)
@@ -92,46 +125,54 @@ APP_PROFILE=dev                    # dev | test
 MONGODB_URI=mongodb://usuario:senha@localhost:27017/ambientes?authSource=admin
 ```
 
-> **NUNCA commite o `.env`** com credenciais reais. Ele está no `.gitignore`. Use `.env.example` como template.
+**`apps/web/.env`** — hoje só `API_URL` (veja as armadilhas abaixo).
 
-Se o MongoDB local rodar com `--auth`, a URI precisa contar usuário/senha. Sem credenciais, o `@SpringBootTest` (context load) falha ao conectar.
+> **NUNCA commite um `.env`** com credenciais reais. Ambos estão no `.gitignore`; use os `.env.example`.
 
-## Arquitetura do backend (estrutura de diretórios)
+Se o MongoDB local rodar com `--auth`, a URI precisa de usuário e senha — sem isso o `@SpringBootTest` falha ao carregar o contexto.
+
+## Arquitetura do backend
 
 ```
 src/main/java/dev/uepb/gereciador/ambientes/
 ├── config/        # Security, JWT (TokenConfig), CORS, Mongo, OpenAPI, AuthConfig
-├── controller/    # REST (Auth, Environment, Reserve, Person)
-├── dto/           # Request/Response (resquest/ tem typo intencional no pacote)
+├── controller/    # Auth, Environment, Reserve, Person
+├── dto/           # resquest/ (entrada, typo intencional) e response/
 ├── entity/        # User, Role, Environment, Reserve
 ├── enums/         # UserRole, ReserveStatus
-├── repository/    # MongoRepository interfaces
-├── seeder/        # RoleSeeder (cria USER/ADMIN/OWNER)
+├── repository/    # Interfaces MongoRepository
+├── seeder/        # RoleSeeder (USER/ADMIN/OWNER)
 ├── service/       # Regras de negócio
 └── AmbientesApplication.java
 ```
 
-## Regras de negócio (ReserveService)
+## Regras de negócio (`ReserveService`)
 
-- Data da reserva deve ser **presente ou futura**.
-- Slots de **exatamente 1 hora**, iniciando em **hora cheia**.
-- Horário de funcionamento: **08:00–22:00**.
-- **Sem sobreposição** de slots para o mesmo ambiente+data.
+- Data **presente ou futura**.
+- Slots de **exatamente 1 hora**, começando em **hora cheia**.
+- Funcionamento **08:00–22:00** — 14 slots por dia.
+- No dia de hoje, horários já passados são recusados.
+- **Sem sobreposição** para o mesmo ambiente + data → `409 Conflict`.
 - Status inicial sempre `PENDING`.
+- `GET /reserves/{environmentId}?date=` devolve os slots **livres**, não os ocupados.
 
-## Convensões de código
+## Convenções de código
 
-- **Formatação**: Google Java Style (definido em `.vscode/settings.json`: `eclipse` formatter). `formatOnSave` + organize imports.
-- **Lombok**: use `@Getter`, `@Setter`, records para DTOs.
-- **Idioma**: código, javadocs, mensagens e respostas de API em **PT-BR**. Nome de pacote é `gereciador` (typo histórico, não corrigir).
-- **Javadoc**: cada classe pública tem javadoc em PT-BR (padrão do projeto).
-- **Dtos**: respostas utilizam records em `dto/response`; requests em `dto/resquest` (typo mantido), com bean validation (`@Valid`).
-- **Security**: `@PreAuthorize` nos controllers (ex.: `hasRole('ROLE_ADMIN')`), Javadoc de perfil em cada endpoint.
+- **Formatação:** Google Java Style (`.vscode/settings.json`, formatter `eclipse`), `formatOnSave` + organize imports.
+- **Lombok:** `@Getter`, `@Setter`, `record` para DTOs.
+- **Idioma:** código, Javadoc, mensagens e respostas de API em **PT-BR**. Toda classe pública tem Javadoc.
+- **DTOs:** respostas em `dto/response`, requisições em `dto/resquest` (typo mantido), com Bean Validation (`@Valid`).
+- **Typos históricos intencionais:** pacote `gereciador` e diretório `resquest`. **Não corrigir** — quebra imports em todo o projeto.
 
-## Testes
+## Armadilhas conhecidas
 
-- Unit: Service tests com **Mockito** (`@ExtendWith(MockitoExtension.class)`) em `src/test/java`.
-- Integration: `AmbientesApplicationTests` (`@SpringBootTest`) — precisa de MongoDB acessível (config da URI em `application-test.properties`).
+Três coisas que já custaram tempo e não são óbvias no código:
+
+1. **`npm run generate:api` devolve 404.** O `orval.config.ts` busca `${API_URL}/openapi.json`, mas o SpringDoc publica em `/v3/api-docs`. Alinhe os dois antes de gerar (`springdoc.api-docs.path=/openapi.json` no servidor, ou a URL no orval).
+2. **`API_URL` não chega ao browser.** `src/lib/api.ts` lê `import.meta.env.API_URL`, mas o Vite só expõe variáveis com prefixo `VITE_` — o valor é sempre `undefined` e o axios cai em URL relativa. A correção é `VITE_API_URL`. (No `orval.config.ts` é `process.env.API_URL` via dotenv, no Node — esse funciona.)
+3. **Escrita em `/environments` está aberta.** Só o `PersonController` tem `@PreAuthorize`; o `EnvironmentController` não tem nenhum, então qualquer autenticado — inclusive `USER` — pode criar, editar e apagar ambientes. As tabelas de perfis nos READMEs descrevem a intenção, não o comportamento atual.
+
+Além disso: o CORS em `CorsConfig.java` libera `http://localhost:5173`, `http://localhost:3000` e a URL do Render. O deploy usa `apps/server/Dockerfile` (multistage, JRE 21) e respeita `PORT`.
 
 ## Skills — MEDIDAS OBRIGATÓRIAS 🔒
 
@@ -139,26 +180,21 @@ O uso de skills é **obrigatório** — não comece nenhuma tarefa sem verificar
 
 **Antes de iniciar qualquer trabalho**, o agente deve:
 1. Consultar as skills instaladas (`skills-lock.json` e `.agents/skills/*/SKILL.md`).
-2. Carregar a skill correspondente ao escopo da tarefa (via a ferramenta de skill/agente) **antes** de implementar.
+2. Carregar a skill correspondente ao escopo da tarefa **antes** de implementar.
 3. Seguir o fluxo definido na skill em todas as etapas.
 
 | Skill | Quando usar (OBRIGATÓRIO) |
 | ----- | -------------------------- |
-| `find-skills` (`find-skills`) | Sempre que o usuário perguntar "como faz X?", "existe skill para X?", "você consegue X?", quiser descobrir/instalar novas capacidades, ou pedir para encontrar share de widgets. Não recomende skills sem verificar instalação e reputação da fonte. |
-| `frontend-design` (`frontend-design`) | **Toda** vez que houver criação ou reformulação de UI — novo componente/página em `apps/web/`, ajustes visuais, estilos, tipografia, identidade. Também para arquivos `.pen`/designs. Nunca iniciar UI sem carregá-la. |
-| `shadcn` (`shadcn`) | **Toda** vez que houver trabalho de UI com **shadcn/ui** no frontend — adicionar, buscar, corrigir, debugar, estilizar ou compor componentes no `apps/web/` (ou qualquer projeto com `components.json`), incluindo chat interfaces e presets. Sempre que for necessário criar/usar componentes shadcn, carregar esta skill antes. |
+| `find-skills` | Sempre que o usuário perguntar "como faz X?", "existe skill para X?", "você consegue X?", quiser descobrir/instalar novas capacidades, ou pedir para encontrar share de widgets. Não recomende skills sem verificar instalação e reputação da fonte. |
+| `frontend-design` | **Toda** vez que houver criação ou reformulação de UI — novo componente/página em `apps/web/`, ajustes visuais, estilos, tipografia, identidade. Também para arquivos `.pen`/designs. Nunca iniciar UI sem carregá-la. |
+| `shadcn` | **Toda** vez que houver trabalho de UI com **shadcn/ui** no frontend — adicionar, buscar, corrigir, debugar, estilizar ou compor componentes no `apps/web/` (ou qualquer projeto com `components.json`), incluindo chat interfaces e presets. |
 
-> **Regra de ouro:** para o frontend (`apps/web/` e designs), `frontend-design` SEMPRE. Para componentes shadcn no frontend, `shadcn` SEMPRE. Para descoberta/instalação de capacidades, `find-skills` SEMPRE. Se uma skill do catálogo for aplicável, usá-la tem prioridade máxima e não pode ser pulada.
+> **Regra de ouro:** para o frontend (`apps/web/` e designs), `frontend-design` SEMPRE. Para componentes shadcn, `shadcn` SEMPRE. Para descoberta/instalação de capacidades, `find-skills` SEMPRE. Se uma skill do catálogo for aplicável, usá-la tem prioridade máxima e não pode ser pulada.
 
 Onde as skills vivem:
 - `.agents/skills/<nome>/SKILL.md` — skills oficiais (fonte primária).
 - `.claude/skills/` — espelho para o Claude Code.
 - `skills-lock.json` — lock das versões instaladas.
-
-## Pendências / cuidado
-
-- CORS liberado em `CorsConfig.java`: `http://localhost:5173` (Vite), `http://localhost:3000` e a URL do Render (`https://gerenciador-de-ambientes-uepb-server.onrender.com`).
-- Deploy: `apps/server/Dockerfile` (multistage, JRE 21), definido para hospedagem no **Render** (usa `PORT`).
 
 ## graphify
 

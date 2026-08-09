@@ -3,7 +3,7 @@ import { defineConfig } from "orval";
 
 config();
 
-const openApiUrl = `${process.env.API_URL}/openapi.json`;
+const openApiUrl = `${process.env.VITE_API_URL}/v3/api-docs`;
 
 export default defineConfig({
   reactQuery: {

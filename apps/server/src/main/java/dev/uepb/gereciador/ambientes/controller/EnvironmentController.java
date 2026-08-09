@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,13 +32,15 @@ import jakarta.validation.Valid;
  * Controller responsável pelo gerenciamento de ambientes físicos da UEPB.
  *
  * <p>
- * Todos os endpoints requerem autenticação via token JWT (Bearer Token). Os endpoints disponíveis
- * são:
+ * Todos os endpoints requerem autenticação via token JWT (Bearer Token). A leitura é liberada a
+ * qualquer usuário autenticado; a escrita exige perfil {@code ADMIN} ou {@code OWNER}.
  * </p>
  * <ul>
- * <li>{@code POST /environments} — cria um novo ambiente</li>
- * <li>{@code PUT /environments/{id}} — atualiza um ambiente existente</li>
- * <li>{@code GET /environments} — lista todos os ambientes</li>
+ * <li>{@code GET /environments} — lista todos os ambientes (autenticado)</li>
+ * <li>{@code GET /environments/{id}} — busca um ambiente pelo ID (autenticado)</li>
+ * <li>{@code POST /environments} — cria um novo ambiente (ADMIN/OWNER)</li>
+ * <li>{@code PUT /environments/{id}} — atualiza um ambiente existente (ADMIN/OWNER)</li>
+ * <li>{@code DELETE /environments/{id}} — exclui um ambiente (ADMIN/OWNER)</li>
  * </ul>
  *
  * @author Gerenciador de Ambientes UEPB
@@ -56,18 +59,26 @@ public class EnvironmentController {
     /**
      * Cria um novo ambiente no sistema.
      *
+     * <p>
+     * Acesso restrito a usuários com perfil {@code ADMIN} ou {@code OWNER}.
+     * </p>
+     *
      * @param createEnvironmentRequest DTO com nome e descrição do ambiente
      * @return {@code 201 Created} com os dados do ambiente criado
      */
     @Operation(summary = "Criar ambiente",
-            description = "Cadastra um novo ambiente físico disponível para reserva na UEPB.")
+            description = "Cadastra um novo ambiente físico disponível para reserva na UEPB. "
+                    + "Requer perfil ADMIN ou OWNER.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Ambiente criado com sucesso",
                     content = @Content(schema = @Schema(implementation = Environment.class))),
             @ApiResponse(responseCode = "401", description = "Não autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Acesso negado (requer ADMIN ou OWNER)",
+                    content = @Content),
             @ApiResponse(responseCode = "422", description = "Dados de entrada inválidos",
                     content = @Content)})
     @PostMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_OWNER')")
     public ResponseEntity<Environment> create(
             @Valid @RequestBody SaveEnvironmentRequest createEnvironmentRequest) {
         Environment environment = environmentService.create(createEnvironmentRequest);
@@ -77,21 +88,29 @@ public class EnvironmentController {
     /**
      * Atualiza os dados de um ambiente existente.
      *
+     * <p>
+     * Acesso restrito a usuários com perfil {@code ADMIN} ou {@code OWNER}.
+     * </p>
+     *
      * @param environmentId o ID do ambiente a ser atualizado
      * @param createEnvironmentRequest DTO com os novos dados do ambiente
      * @return {@code 200 OK} com os dados do ambiente atualizado
      */
     @Operation(summary = "Atualizar ambiente",
-            description = "Atualiza o nome e/ou descrição de um ambiente existente pelo seu ID.")
+            description = "Atualiza o nome e/ou descrição de um ambiente existente pelo seu ID. "
+                    + "Requer perfil ADMIN ou OWNER.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Ambiente atualizado com sucesso",
                     content = @Content(schema = @Schema(implementation = Environment.class))),
             @ApiResponse(responseCode = "401", description = "Não autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Acesso negado (requer ADMIN ou OWNER)",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Ambiente não encontrado",
                     content = @Content),
             @ApiResponse(responseCode = "422", description = "Dados de entrada inválidos",
                     content = @Content)})
     @PutMapping("/{environmentId}")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_OWNER')")
     public ResponseEntity<Environment> update(
             @Parameter(description = "ID do ambiente a ser atualizado",
                     example = "664f1a2b3c4d5e6f7a8b9c0d") @PathVariable String environmentId,
@@ -104,17 +123,25 @@ public class EnvironmentController {
     /**
      * Exclui um ambiente existente pelo seu ID.
      *
+     * <p>
+     * Acesso restrito a usuários com perfil {@code ADMIN} ou {@code OWNER}.
+     * </p>
+     *
      * @param environmentId o ID do ambiente a ser excluído
      */
     @Operation(summary = "Excluir ambiente",
-            description = "Remove o ambiente identificado pelo ID fornecido.")
+            description = "Remove o ambiente identificado pelo ID fornecido. "
+                    + "Requer perfil ADMIN ou OWNER.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Ambiente excluído com sucesso"),
             @ApiResponse(responseCode = "401", description = "Não autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Acesso negado (requer ADMIN ou OWNER)",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Ambiente não encontrado",
                     content = @Content)})
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{environmentId}")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_OWNER')")
     public void delete(@PathVariable String environmentId) {
         environmentService.deleteById(environmentId);
     }
