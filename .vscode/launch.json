@@ -2,13 +2,43 @@
   "configurations": [
     {
       "type": "java",
+      "name": "AmbientesApplication",
+      "request": "launch",
+      "mainClass": "dev.uepb.gereciador.ambientes.AmbientesApplication",
+      "projectName": ""
+    },
+    {
+      "type": "java",
       "name": "Spring Boot-AmbientesApplication<ambientes>",
       "request": "launch",
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}/apps/server",
       "mainClass": "dev.uepb.gereciador.ambientes.AmbientesApplication",
       "projectName": "ambientes",
       "args": "",
-      "envFile": "${workspaceFolder}/.env"
+      "envFile": "${workspaceFolder}/apps/server/.env"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "web (Vite)",
+      "runtimeExecutable": "npm",
+      "cwd": "${workspaceFolder}/apps/web",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "envFile": "${workspaceFolder}/apps/web/.env",
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Server + Web",
+      "configurations": [
+        "Spring Boot-AmbientesApplication<ambientes>",
+        "web (Vite)"
+      ],
+      "stopAll": true
     }
   ]
 }
