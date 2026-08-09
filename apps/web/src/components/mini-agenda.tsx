@@ -1,6 +1,6 @@
 import type { SlotAvailabilityResponse } from "@/generated/models/slotAvailabilityResponse";
-import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 /**
  * Mini-agenda de um dia: uma barra por hora de funcionamento, livre em cinza claro
@@ -25,7 +25,7 @@ export function MiniAgenda({
           className={cn(
             "flex-1 rounded-xs transition-all",
             slot.status === "AVAILABLE" && "h-2.5 bg-muted",
-            slot.status === "RESERVED" && "h-8 bg-primary",
+            slot.status === "RESERVED" && "h-2.5 bg-primary",
             slot.status === "CLOSED" && "h-2.5 bg-border",
           )}
         />
