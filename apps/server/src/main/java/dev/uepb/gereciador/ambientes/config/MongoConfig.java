@@ -23,15 +23,21 @@ import com.mongodb.client.MongoClients;
 @Configuration
 public class MongoConfig {
 
+    /** URI de conexão, vinda da variável de ambiente {@code MONGODB_URI}. */
+    private final ConnectionString connectionString;
+
+    public MongoConfig(@Value("${MONGODB_URI}") String mongodbUri) {
+        this.connectionString = new ConnectionString(mongodbUri);
+    }
+
     /**
      * Cria o bean {@link MongoClient} com base na URI de conexão configurada.
      *
-     * @param mongodbUri a URI de conexão, injetada da propriedade de ambiente {@code MONGODB_URI}
      * @return instância configurada do {@link MongoClient}
      */
     @Bean
-    public MongoClient mongoClient(@Value("${MONGODB_URI}") String mongodbUri) {
-        return MongoClients.create(new ConnectionString(mongodbUri));
+    public MongoClient mongoClient() {
+        return MongoClients.create(connectionString);
     }
 
     /**
@@ -49,8 +55,9 @@ public class MongoConfig {
             @Value("${spring.data.mongodb.database:}") String database) {
         String dbName = database;
         if (dbName == null || dbName.isBlank()) {
-            ConnectionString connectionString = new ConnectionString(
-                    System.getProperty("MONGODB_URI", "mongodb://localhost:27017/ambientes_test"));
+            // Da própria URI de conexão: `System.getProperty` lia propriedade de
+            // sistema da JVM, que nunca é setada em produção, e o fallback acabava
+            // apontando o template para o banco de teste.
             dbName = connectionString.getDatabase();
             if (dbName == null || dbName.isBlank()) {
                 dbName = "ambientes";
