@@ -5,6 +5,8 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
@@ -52,6 +54,8 @@ import dev.uepb.gereciador.ambientes.repository.UserRepository;
 @Profile({"test", "dev"})
 public class TestDataSeeder implements ApplicationListener<ContextRefreshedEvent> {
 
+        private static final Logger log = LoggerFactory.getLogger(TestDataSeeder.class);
+
         /** Senha padrão compartilhada por todos os usuários de teste. */
         private static final String DEFAULT_PASSWORD = "senha@123";
 
@@ -85,10 +89,26 @@ public class TestDataSeeder implements ApplicationListener<ContextRefreshedEvent
         /**
          * Invocado pelo Spring quando o contexto da aplicação é inicializado.
          *
+         * <p>Como o {@link RoleSeeder}, engole falhas de persistência: dados de exemplo não
+         * justificam impedir a aplicação de subir.</p>
+         *
          * @param contextRefreshedEvent o evento de atualização do contexto
          */
         @Override
         public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
+                try {
+                        this.seedTestData();
+                } catch (RuntimeException exception) {
+                        log.error("Não foi possível popular os dados de exemplo. "
+                                        + "A aplicação vai subir sem eles — verifique a conexão com o MongoDB.",
+                                        exception);
+                }
+        }
+
+        /**
+         * Cria usuários, ambientes e reservas de exemplo.
+         */
+        private void seedTestData() {
                 User owner = this.createUser("Maria Oliveira", OWNER_EMAIL, UserRole.OWNER);
                 User admin = this.createUser("João Pereira", ADMIN_EMAIL, UserRole.ADMIN);
                 User user = this.createUser("Marina Silva", USER_EMAIL, UserRole.USER);
