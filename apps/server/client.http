@@ -22,7 +22,9 @@ Authorization: Bearer {{token}}
 
 {
   "name": "Laboratório",
-  "description": "descvnfjvfh"
+  "description": "descvnfjvfh",
+  "capacity": 30,
+  "block": "Bloco B"
 }
 
 ###
@@ -38,7 +40,9 @@ Authorization: Bearer {{token}}
 
 {
   "name": "Laboratório atualizado",
-  "description": "descvnfjvfh"
+  "description": "descvnfjvfh",
+  "capacity": 40,
+  "block": "Bloco B · Térreo"
 }
 
 ###

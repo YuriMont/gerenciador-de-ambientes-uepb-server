@@ -16,9 +16,12 @@ Não presuma que existe o que ainda não foi construído:
 
 | Parte | Situação |
 | ----- | -------- |
-| `apps/server/` | **Funcional.** Auth JWT, CRUD de ambientes, criação de reservas, consulta de disponibilidade. **Não existe** endpoint para aprovar/recusar: `ReserveStatus` tem `APPROVED`/`REJECTED`, mas nada muda o status depois de criado. |
-| `apps/web/` | **Esqueleto.** Só há `App.tsx` (página do template do Vite), `components/ui/button.tsx` e `lib/{api,queryClient,utils}.ts`. **Não há rotas, telas, nem `src/generated/`** — a pasta do orval só aparece depois de rodar `npm run generate:api`. |
-| `design/prototype.pen` | **Protótipo completo**, 14 telas (8 desktop + 6 mobile). É a especificação visual do que falta em `apps/web/`. |
+| `apps/server/` | **Funcional.** Auth JWT, CRUD de ambientes, ciclo completo de reservas (criar, listar, aprovar, recusar, cancelar), disponibilidade por ambiente e painel da tela de início. |
+| `apps/web/` | **Telas implementadas** a partir do protótipo: Entrar, Criar conta, Início, Ambientes (+ diálogo de novo ambiente), Reservar ambiente, Minhas reservas, Aprovar reservas e Usuários. Roteamento com `react-router-dom`, sessão em `src/lib/auth.tsx` e client HTTP escrito à mão em `src/api/` — **não há `src/generated/`**, a pasta do orval só aparece depois de rodar `npm run generate:api` com o backend no ar. |
+| `design/prototype.pen` | **Protótipo completo**, 14 telas (8 desktop + 6 mobile). É a especificação visual de `apps/web/`. |
+
+> As telas mobile do protótipo não viraram rotas separadas: o layout é responsivo, e a
+> barra lateral do desktop vira a barra de abas inferior abaixo de `lg`.
 
 ## Estrutura do monorepo
 
@@ -152,9 +155,32 @@ src/main/java/dev/uepb/gereciador/ambientes/
 - Slots de **exatamente 1 hora**, começando em **hora cheia**.
 - Funcionamento **08:00–22:00** — 14 slots por dia.
 - No dia de hoje, horários já passados são recusados.
-- **Sem sobreposição** para o mesmo ambiente + data → `409 Conflict`.
+- O número de participantes não passa da **capacidade do ambiente** (`Environment.capacity`).
+  Ambientes salvos antes do campo existir têm `capacity` nulo e ficam sem limite.
 - Status inicial sempre `PENDING`.
+- **Só reservas `APPROVED` ocupam um horário.** Um pedido pendente não impede que outra pessoa
+  peça o mesmo slot, e recusar devolve o horário à agenda — é o que o protótipo promete em
+  "Enquanto está PENDENTE, o horário segue disponível" e "Ao recusar, o horário volta a ficar
+  livre". O `409 Conflict` acontece na criação **e** na aprovação, sempre contra o que já está
+  aprovado.
 - `GET /reserves/{environmentId}?date=` devolve os slots **livres**, não os ocupados.
+- `GET /reserves/{environmentId}/availability?date=` devolve os 14 horários com a situação de
+  cada um: `AVAILABLE`, `RESERVED` ou `CLOSED` (horário já passado hoje).
+
+### Endpoints de reserva
+
+| Endpoint | Acesso |
+| -------- | ------ |
+| `POST /reserves` | Autenticado |
+| `GET /reserves?status=&date=&environmentId=` | ADMIN/OWNER |
+| `GET /reserves/mine?status=` | Autenticado |
+| `GET /reserves/dashboard` | ADMIN/OWNER |
+| `GET /reserves/availability?date=` | Autenticado |
+| `GET /reserves/{environmentId}?date=` | Autenticado |
+| `GET /reserves/{environmentId}/availability?date=` | Autenticado |
+| `PATCH /reserves/{reserveId}/approve` | ADMIN/OWNER |
+| `PATCH /reserves/{reserveId}/reject` | ADMIN/OWNER |
+| `DELETE /reserves/{reserveId}` | Dono da reserva ou ADMIN/OWNER |
 
 ## Convenções de código
 
@@ -166,11 +192,20 @@ src/main/java/dev/uepb/gereciador/ambientes/
 
 ## Armadilhas conhecidas
 
-Três coisas que já custaram tempo e não são óbvias no código:
+Coisas que já custaram tempo e não são óbvias no código:
 
-1. **`npm run generate:api` devolve 404.** O `orval.config.ts` busca `${API_URL}/openapi.json`, mas o SpringDoc publica em `/v3/api-docs`. Alinhe os dois antes de gerar (`springdoc.api-docs.path=/openapi.json` no servidor, ou a URL no orval).
-2. **`API_URL` não chega ao browser.** `src/lib/api.ts` lê `import.meta.env.API_URL`, mas o Vite só expõe variáveis com prefixo `VITE_` — o valor é sempre `undefined` e o axios cai em URL relativa. A correção é `VITE_API_URL`. (No `orval.config.ts` é `process.env.API_URL` via dotenv, no Node — esse funciona.)
-3. **Escrita em `/environments` está aberta.** Só o `PersonController` tem `@PreAuthorize`; o `EnvironmentController` não tem nenhum, então qualquer autenticado — inclusive `USER` — pode criar, editar e apagar ambientes. As tabelas de perfis nos READMEs descrevem a intenção, não o comportamento atual.
+1. **`npm run generate:api` precisa do backend no ar.** O orval busca o OpenAPI em
+   `${VITE_API_URL}/v3/api-docs`; sem servidor rodando ele falha. Por isso o client HTTP de
+   `apps/web/src/api/` é escrito à mão — ao gerar o client, troque os imports desses módulos
+   pelos gerados em `src/generated/`, que têm os mesmos formatos.
+2. **`VITE_API_URL`, não `API_URL`.** O Vite só expõe ao browser variáveis com o prefixo
+   `VITE_`. `src/lib/api.ts` lê `import.meta.env.VITE_API_URL`; sem ela o axios cai em URL
+   relativa. No `orval.config.ts` a leitura é `process.env.VITE_API_URL` via dotenv, no Node.
+3. **`LocalTime` chega como `HH:mm:ss`.** O Jackson serializa os slots com segundos; a interface
+   recorta com `formatTime` em `apps/web/src/lib/format.ts`. Ao enviar uma reserva, mande o
+   mesmo formato que veio da disponibilidade.
+4. **`new Date("2026-04-16")` é interpretado como UTC** e volta um dia atrás em fusos negativos.
+   Use `parseIsoDate` de `lib/format.ts` para datas `yyyy-MM-dd`.
 
 Além disso: o CORS em `CorsConfig.java` libera `http://localhost:5173`, `http://localhost:3000` e a URL do Render. O deploy usa `apps/server/Dockerfile` (multistage, JRE 21) e respeita `PORT`.
 

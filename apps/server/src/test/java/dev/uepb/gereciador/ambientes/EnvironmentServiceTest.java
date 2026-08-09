@@ -42,7 +42,7 @@ public class EnvironmentServiceTest {
         environment.setDescription("Laboratório para aulas de redes de computadores");
 
         saveEnvironmentRequest = new SaveEnvironmentRequest("Laboratório de Redes",
-                "Laboratório para aulas de redes de computadores");
+                "Laboratório para aulas de redes de computadores", 30, "Bloco B");
     }
 
     @Test
@@ -63,7 +63,8 @@ public class EnvironmentServiceTest {
         when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
 
         SaveEnvironmentRequest updatedRequest = new SaveEnvironmentRequest(
-                "Laboratório de Software", "Laboratório para aulas de desenvolvimento de software");
+                "Laboratório de Software", "Laboratório para aulas de desenvolvimento de software",
+                40, "Bloco A");
         Environment updatedEnvironment = environmentService.update("1", updatedRequest);
 
         assertNotNull(updatedEnvironment);
@@ -78,7 +79,8 @@ public class EnvironmentServiceTest {
         when(environmentRepository.findById("2")).thenReturn(Optional.empty());
 
         SaveEnvironmentRequest updatedRequest = new SaveEnvironmentRequest(
-                "Laboratório de Software", "Laboratório para aulas de desenvolvimento de software");
+                "Laboratório de Software", "Laboratório para aulas de desenvolvimento de software",
+                40, "Bloco A");
 
         assertThrows(ResponseStatusException.class,
                 () -> environmentService.update("2", updatedRequest));

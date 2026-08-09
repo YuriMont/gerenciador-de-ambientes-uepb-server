@@ -34,6 +34,8 @@ public class EnvironmentService {
         Environment environment = new Environment();
         environment.setName(createEnvironmentRequest.name());
         environment.setDescription(createEnvironmentRequest.description());
+        environment.setCapacity(createEnvironmentRequest.capacity());
+        environment.setBlock(createEnvironmentRequest.block());
         environmentRepository.save(environment);
         return environment;
     }
@@ -53,6 +55,8 @@ public class EnvironmentService {
 
         environment.setName(createEnvironmentRequest.name());
         environment.setDescription(createEnvironmentRequest.description());
+        environment.setCapacity(createEnvironmentRequest.capacity());
+        environment.setBlock(createEnvironmentRequest.block());
         environmentRepository.save(environment);
         return environment;
     }

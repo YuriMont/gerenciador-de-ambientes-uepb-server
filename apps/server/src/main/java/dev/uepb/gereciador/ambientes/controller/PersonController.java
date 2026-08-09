@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import dev.uepb.gereciador.ambientes.config.AuthConfig;
 import dev.uepb.gereciador.ambientes.dto.response.UserResponse;
+import dev.uepb.gereciador.ambientes.dto.response.UserSummaryResponse;
 import dev.uepb.gereciador.ambientes.dto.resquest.RegisterUserRequest;
 import dev.uepb.gereciador.ambientes.entity.User;
 import dev.uepb.gereciador.ambientes.service.PersonService;
@@ -68,8 +69,7 @@ public class PersonController {
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser() {
         User user = (User) authConfig.loadUserByUsername(authConfig.getLoggedUsername());
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new UserResponse(user.getName(), user.getEmail()));
+        return ResponseEntity.status(HttpStatus.OK).body(UserResponse.from(user));
     }
 
     /**
@@ -81,20 +81,19 @@ public class PersonController {
      */
     @Operation(
         summary = "Listar todos os usuários",
-        description = "Retorna nome e e-mail de todos os usuários cadastrados. Requer perfil ADMIN ou OWNER."
+        description = "Retorna nome, e-mail, perfil, data de cadastro e total de reservas de todos "
+            + "os usuários cadastrados. Requer perfil ADMIN ou OWNER."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Lista de usuários retornada",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserResponse.class)))),
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserSummaryResponse.class)))),
         @ApiResponse(responseCode = "401", description = "Não autenticado", content = @Content),
         @ApiResponse(responseCode = "403", description = "Acesso negado (requer ADMIN ou OWNER)", content = @Content)
     })
     @GetMapping("/list")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_OWNER')")
-    public ResponseEntity<List<UserResponse>> allUsers() {
-        List<UserResponse> users = personService.findAll().stream()
-                .map(item -> new UserResponse(item.getName(), item.getEmail())).toList();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<List<UserSummaryResponse>> allUsers() {
+        return ResponseEntity.ok(personService.findAllSummaries());
     }
 
     /**

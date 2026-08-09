@@ -35,9 +35,17 @@ public class Environment {
     @Schema(description = "Nome do ambiente", example = "Laboratório de Informática 02")
     private String name;
 
-    /** Descrição detalhada do ambiente (capacidade, recursos disponíveis, etc.). */
+    /** Descrição detalhada do ambiente (recursos disponíveis, restrições de uso, etc.). */
     @Schema(description = "Descrição do ambiente", example = "Laboratório com 30 computadores e projetor")
     private String description;
+
+    /** Quantidade de lugares do ambiente. Limita o número de participantes de uma reserva. */
+    @Schema(description = "Quantidade de lugares", example = "220")
+    private Integer capacity;
+
+    /** Bloco onde o ambiente fica (ex.: "Bloco C · Térreo"). */
+    @Schema(description = "Bloco onde o ambiente fica", example = "Bloco C")
+    private String block;
 
     /** URL de uma imagem representativa do ambiente. */
     @Schema(description = "URL da imagem do ambiente", example = "https://storage.example.com/lab02.jpg")

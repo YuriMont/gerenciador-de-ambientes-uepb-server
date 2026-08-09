@@ -1,13 +1,16 @@
 package dev.uepb.gereciador.ambientes.service;
 
+import java.util.Comparator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import dev.uepb.gereciador.ambientes.dto.response.UserSummaryResponse;
 import dev.uepb.gereciador.ambientes.dto.resquest.RegisterUserRequest;
 import dev.uepb.gereciador.ambientes.entity.Role;
 import dev.uepb.gereciador.ambientes.entity.User;
 import dev.uepb.gereciador.ambientes.enums.UserRole;
+import dev.uepb.gereciador.ambientes.repository.ReserveRespository;
 import dev.uepb.gereciador.ambientes.repository.RoleRepository;
 import dev.uepb.gereciador.ambientes.repository.UserRepository;
 
@@ -34,6 +37,9 @@ public class PersonService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ReserveRespository reserveRespository;
+
     /**
      * Retorna a lista de todos os usuários cadastrados no sistema.
      *
@@ -45,6 +51,40 @@ public class PersonService {
      */
     public List<User> findAll() {
         return userRepository.findAll();
+    }
+
+    /**
+     * Retorna todos os usuários cadastrados junto ao total de reservas de cada um.
+     *
+     * <p>
+     * Alimenta a listagem de pessoas da administração, que mostra perfil, data de cadastro e
+     * quantidade de reservas por pessoa.
+     * </p>
+     *
+     * @return lista de resumos de usuário, ordenada do maior para o menor nível de acesso
+     */
+    public List<UserSummaryResponse> findAllSummaries() {
+        return userRepository.findAll().stream()
+                .map(user -> UserSummaryResponse.from(user,
+                        reserveRespository.countByUserId(user.getId())))
+                .sorted(Comparator.comparingInt(PersonService::roleWeight)
+                        .thenComparing(UserSummaryResponse::name,
+                                Comparator.nullsLast(String::compareToIgnoreCase)))
+                .toList();
+    }
+
+    /**
+     * Peso de ordenação de um perfil, do mais para o menos privilegiado.
+     *
+     * @param summary o resumo do usuário
+     * @return {@code 0} para OWNER, {@code 1} para ADMIN e {@code 2} para os demais
+     */
+    private static int roleWeight(UserSummaryResponse summary) {
+        if (summary.role() == UserRole.OWNER) {
+            return 0;
+        }
+
+        return summary.role() == UserRole.ADMIN ? 1 : 2;
     }
 
     /**
