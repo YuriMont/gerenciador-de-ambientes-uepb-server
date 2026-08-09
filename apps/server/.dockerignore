@@ -1,0 +1,29 @@
+# Mantém o contexto de build enxuto: o Docker envia este diretório inteiro ao
+# daemon antes de rodar qualquer instrução, e no Render isso é tempo de deploy.
+
+# Build local — seria sobrescrito pelo build do estágio 1 de qualquer forma.
+target/
+
+# Segredos. O .env nunca deve entrar na imagem: a aplicação o carrega no boot
+# (dotenv-java no main), então um .env copiado por engano sobrescreveria em
+# silêncio as variáveis configuradas no Render.
+.env
+.env.*
+
+# O build usa a imagem oficial do Maven, então o wrapper não é necessário.
+.mvn/
+mvnw
+mvnw.cmd
+
+# Metadados de git e editor.
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.idea/
+
+# Documentação e arquivos de apoio ao desenvolvimento.
+*.md
+client.http
+Dockerfile
+.dockerignore

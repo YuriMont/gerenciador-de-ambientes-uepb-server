@@ -1,26 +1,56 @@
-# Estágio de Build
-FROM maven:3.9.6-eclipse-temurin-21 AS build
-WORKDIR /app
+# Imagem da API (Spring Boot). O frontend em apps/web é publicado à parte,
+# como Static Site no Render, então nada de Node aqui.
+#
+# O contexto de build é apps/server — não a raiz do repositório. No Render:
+#   Dockerfile Path:  ./apps/server/Dockerfile
+#   Docker Build Context Directory: ./apps/server
 
-# Copia o pom.xml e baixa as dependências (cache)
+# ---------- Estágio de build ----------
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /build
+
+# As dependências vêm antes do código: esta camada só é refeita quando o pom.xml
+# muda, o que poupa vários minutos nos deploys em que só o src mudou.
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn -B -ntp dependency:go-offline
 
-# Copia o código fonte e compila o projeto
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn -B -ntp package -DskipTests
 
-# Estágio de Execução
-FROM eclipse-temurin:21-jre-jammy
+# ---------- Estágio de execução ----------
+# Só o JRE: a imagem final não carrega Maven nem o JDK, ficando bem menor.
+FROM eclipse-temurin:21-jre AS runtime
+
+# Rodar como root dentro do container não traz nenhum ganho aqui.
+RUN groupadd --system spring \
+    && useradd --system --gid spring --shell /usr/sbin/nologin spring
+
 WORKDIR /app
 
-# Copia o JAR gerado no estágio de build
-COPY --from=build /app/target/*.jar app.jar
+# O spring-boot-maven-plugin deixa em target/ o jar executável e um
+# .jar.original (que não casa com o glob abaixo, por não terminar em .jar).
+COPY --from=build --chown=spring:spring /build/target/*.jar app.jar
 
-# O Render define a variável de ambiente PORT automaticamente.
-# O Spring Boot reconhece a variável SERVER_PORT, então mapeamos uma para a outra.
-ENV SERVER_PORT=8080
+USER spring
+
+# O container nasce em UTC. Como as reservas são por data e por slot de hora,
+# sem isto o "hoje" do servidor virava 3 h antes da meia-noite local.
+ENV TZ=America/Recife
+
+# A aplicação exige um perfil ativo: application.properties tem
+# `spring.profiles.active=${APP_PROFILE}` sem valor padrão, e é o perfil que
+# traz `spring.data.mongodb.uri`. Os perfis existentes são dev e test — só o dev
+# serve para rodar de verdade. Dá para sobrescrever pelo dashboard do Render.
+ENV APP_PROFILE=dev
+
+# MaxRAMPercentage faz a JVM enxergar o limite do container em vez da RAM da
+# máquina — sem isso a heap estoura os 512 MB dos planos menores do Render.
+# SerialGC gasta menos memória e menos CPU nos planos de 0,1–0,5 vCPU.
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseSerialGC"
+
+# Documental: quem manda de fato é a variável PORT injetada pelo Render.
 EXPOSE 8080
 
-# Comando para iniciar a aplicação, garantindo que a porta do Render seja utilizada
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
+# `exec` faz o java virar PID 1, para que o SIGTERM do Render chegue nele e o
+# desligamento seja limpo em vez de terminar por timeout.
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -Dserver.port=${PORT:-8080} -jar /app/app.jar"]

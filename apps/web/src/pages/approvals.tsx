@@ -102,6 +102,7 @@ function RequestDetail({ reserve }: { reserve: ReserveResponse }) {
   const approve = useApprove();
   const reject = useReject();
   const isBusy = approve.isPending || reject.isPending;
+  const slots = reserve.slots ?? [];
 
   function handleApprove() {
     approve.mutate(
@@ -178,7 +179,7 @@ function RequestDetail({ reserve }: { reserve: ReserveResponse }) {
         <div className="flex flex-col gap-2">
           <span className="text-xs text-subtle">Horários solicitados</span>
           <div className="flex flex-wrap gap-1.5">
-            {reserve.slots.map((slot) => (
+            {slots.map((slot) => (
               <span
                 key={slot.startTime}
                 className="rounded-4xl bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent-strong"
@@ -199,9 +200,8 @@ function RequestDetail({ reserve }: { reserve: ReserveResponse }) {
         <Alert>
           <ShieldCheck />
           <AlertDescription>
-            Aprovar bloqueia {reserve.slots.length}{" "}
-            {reserve.slots.length === 1 ? "horário" : "horários"} neste ambiente
-            e data.
+            Aprovar bloqueia {slots.length}{" "}
+            {slots.length === 1 ? "horário" : "horários"} neste ambiente e data.
           </AlertDescription>
         </Alert>
 
@@ -297,7 +297,7 @@ export default function ApprovalsPage() {
                     key={reserve.id}
                     reserve={reserve}
                     isSelected={reserve.id === selected?.id}
-                    onSelect={() => setSelectedId(reserve.id)}
+                    onSelect={() => setSelectedId(reserve.id ?? null)}
                   />
                 ))}
               </div>

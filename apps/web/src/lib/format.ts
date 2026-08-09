@@ -31,7 +31,8 @@ export function addDays(date: Date, days: number): Date {
 }
 
 /** "quarta, 16 de abril de 2026" */
-export function formatLongDate(date: string | Date): string {
+export function formatLongDate(date: string | Date | null | undefined): string {
+  if (!date) return "—";
   const value = typeof date === "string" ? parseIsoDate(date) : date;
   return value.toLocaleDateString(LOCALE, {
     weekday: "long",
@@ -117,7 +118,7 @@ export function formatSlotRange(
 }
 
 /** "há 2 h", "ontem", "há 5 min" — usado na fila de aprovação. */
-export function formatRelative(instant: string | null): string {
+export function formatRelative(instant: string | null | undefined): string {
   if (!instant) return "—";
 
   const diffMs = Date.now() - new Date(instant).getTime();

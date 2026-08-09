@@ -130,7 +130,7 @@ export default function MyReservesPage() {
 
   const hours = reserves
     .filter((reserve) => reserve.status === "APPROVED")
-    .reduce((total, reserve) => total + reserve.slots.length, 0);
+    .reduce((total, reserve) => total + (reserve.slots?.length ?? 0), 0);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
@@ -150,9 +150,10 @@ export default function MyReservesPage() {
     const today = todayIso();
     return reserves
       .filter(
-        (reserve) => reserve.status === "APPROVED" && reserve.date >= today,
+        (reserve) =>
+          reserve.status === "APPROVED" && (reserve.date ?? "") >= today,
       )
-      .sort((a, b) => a.date.localeCompare(b.date))[0];
+      .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""))[0];
   }, [reserves]);
 
   const filters: { value: Filter; label: string }[] = [
@@ -270,7 +271,9 @@ export default function MyReservesPage() {
                       <span className="flex flex-col">
                         <span>{formatShortDate(reserve.date)}</span>
                         <span className="text-xs text-subtle">
-                          {parseIsoDate(reserve.date).getFullYear()}
+                          {reserve.date
+                            ? parseIsoDate(reserve.date).getFullYear()
+                            : "—"}
                         </span>
                       </span>
                     </TableCell>
@@ -278,8 +281,8 @@ export default function MyReservesPage() {
                       <span className="flex flex-col">
                         <span>{formatSlotRange(reserve.slots)}</span>
                         <span className="text-xs text-subtle">
-                          {reserve.slots.length}{" "}
-                          {reserve.slots.length === 1 ? "slot" : "slots"}
+                          {reserve.slots?.length ?? 0}{" "}
+                          {reserve.slots?.length === 1 ? "slot" : "slots"}
                         </span>
                       </span>
                     </TableCell>

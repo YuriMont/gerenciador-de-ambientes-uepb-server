@@ -95,12 +95,13 @@ export function RoleBadge({
   role,
   className,
 }: {
-  role: RoleName;
+  role: RoleName | undefined;
   className?: string;
 }) {
+  const resolved = role ?? "USER";
   return (
-    <ToneBadge tone={ROLE_TONE[role]} className={className}>
-      {role}
+    <ToneBadge tone={ROLE_TONE[resolved]} className={className}>
+      {resolved}
     </ToneBadge>
   );
 }

@@ -77,7 +77,7 @@ const CATEGORIES: { value: Category; label: string }[] = [
  * da tela usam a mesma leitura que uma pessoa faria ao ler a lista.
  */
 function categoryOf(environment: Environment): Category {
-  const name = environment.name.toLocaleLowerCase("pt-BR");
+  const name = (environment.name ?? "").toLocaleLowerCase("pt-BR");
   if (name.includes("laborat")) return "laboratorios";
   if (name.includes("auditó") || name.includes("audito")) return "auditorios";
   if (name.includes("sala")) return "salas";
@@ -420,8 +420,10 @@ export default function EnvironmentsPage() {
         category === "todos" || categoryOf(environment) === category;
       const matchesSearch =
         term.length === 0 ||
-        environment.name.toLocaleLowerCase("pt-BR").includes(term) ||
-        environment.description.toLocaleLowerCase("pt-BR").includes(term) ||
+        (environment.name ?? "").toLocaleLowerCase("pt-BR").includes(term) ||
+        (environment.description ?? "")
+          .toLocaleLowerCase("pt-BR")
+          .includes(term) ||
         (environment.block ?? "").toLocaleLowerCase("pt-BR").includes(term);
       return matchesCategory && matchesSearch;
     });
@@ -430,7 +432,8 @@ export default function EnvironmentsPage() {
   // Só horários confirmados contam: os que já passaram saem de `freeSlots` sem ter sido reservados.
   const reservedHoursToday = (availability ?? []).reduce(
     (total, item) =>
-      total + item.slots.filter((slot) => slot.status === "RESERVED").length,
+      total +
+      (item.slots ?? []).filter((slot) => slot.status === "RESERVED").length,
     0,
   );
 
