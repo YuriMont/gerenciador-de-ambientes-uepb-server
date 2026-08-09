@@ -1,4 +1,4 @@
-import type { SlotAvailability } from "@/api/types";
+import type { SlotAvailabilityResponse } from "@/generated/models/slotAvailabilityResponse";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/format";
 
@@ -10,7 +10,7 @@ export function MiniAgenda({
   slots,
   className,
 }: {
-  slots: SlotAvailability[];
+  slots: SlotAvailabilityResponse[];
   className?: string;
 }) {
   return (
@@ -21,7 +21,7 @@ export function MiniAgenda({
       {slots.map((slot) => (
         <span
           key={slot.startTime}
-          title={`${formatTime(slot.startTime)} – ${formatTime(slot.endTime)}`}
+          title={`${formatTime(slot.startTime ?? "")} – ${formatTime(slot.endTime ?? "")}`}
           className={cn(
             "flex-1 rounded-xs transition-all",
             slot.status === "AVAILABLE" && "h-2.5 bg-muted",

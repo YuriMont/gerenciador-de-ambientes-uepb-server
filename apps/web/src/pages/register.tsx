@@ -1,7 +1,3 @@
-import { ArrowRight } from "lucide-react";
-import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { api, apiErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -12,7 +8,12 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { register } from "@/generated/api/auth/auth";
+import { apiErrorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { ArrowRight } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "./login";
 
 export default function RegisterPage() {
@@ -37,7 +38,7 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      await api.post("/auth/register", { name, email, password });
+      await register({ name, email, password });
       await signIn(email, password);
       navigate("/", { replace: true });
     } catch (submitError) {
@@ -84,7 +85,7 @@ export default function RegisterPage() {
               type="email"
               autoComplete="email"
               required
-              placeholder="maria.rodrigues@uepb.edu.br"
+              placeholder="usuario@uepb.edu.br"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
             />

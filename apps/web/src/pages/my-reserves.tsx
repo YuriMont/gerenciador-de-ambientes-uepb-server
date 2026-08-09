@@ -12,8 +12,9 @@ import {
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useCancelReserve, useMyReserves } from "@/api/reserves";
-import type { Reserve, ReserveStatus } from "@/api/types";
+import { useCancel, useFindMine } from "@/generated/api/reserves/reserves";
+import type { ReserveResponse } from "@/generated/models/reserveResponse";
+import type { ReserveStatus } from "@/generated/models/reserveStatus";
 import { PageHeader } from "@/components/app-shell";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
@@ -56,19 +57,27 @@ import {
   parseIsoDate,
   todayIso,
 } from "@/lib/format";
+import { useInvalidateReserves } from "@/lib/queries";
 
 type Filter = "todas" | ReserveStatus;
 
 /** Ação por linha: abrir o ambiente ou cancelar a solicitação. */
-function ReserveActions({ reserve }: { reserve: Reserve }) {
-  const cancelReserve = useCancelReserve();
+function ReserveActions({ reserve }: { reserve: ReserveResponse }) {
+  const invalidateReserves = useInvalidateReserves();
+  const cancelReserve = useCancel();
 
   function handleCancel() {
-    cancelReserve.mutate(reserve.id, {
-      onSuccess: () => toast.success("Reserva cancelada."),
-      onError: (error) =>
-        toast.error(apiErrorMessage(error, "Não foi possível cancelar.")),
-    });
+    cancelReserve.mutate(
+      { reserveId: reserve.id ?? "" },
+      {
+        onSuccess: () => {
+          invalidateReserves();
+          toast.success("Reserva cancelada.");
+        },
+        onError: (error) =>
+          toast.error(apiErrorMessage(error, "Não foi possível cancelar.")),
+      },
+    );
   }
 
   return (
@@ -99,12 +108,12 @@ function ReserveActions({ reserve }: { reserve: Reserve }) {
 }
 
 export default function MyReservesPage() {
-  const { data, isLoading } = useMyReserves();
+  const { data, isLoading } = useFindMine();
 
   const [filter, setFilter] = useState<Filter>("todas");
   const [search, setSearch] = useState("");
 
-  const reserves = useMemo(() => data ?? [], [data]);
+  const reserves = useMemo(() => data?.data ?? [], [data]);
 
   const counts = useMemo(
     () => ({

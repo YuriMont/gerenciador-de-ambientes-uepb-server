@@ -19,10 +19,10 @@ import jakarta.validation.constraints.NotNull;
 @Schema(description = "Slot de horário para reserva (duração de 1 hora, iniciando em hora cheia)")
 public record ReserveSlot(
     @NotNull
-    @Schema(description = "Horário de início", example = "09:00")
+    @Schema(description = "Horário de início", example = "09:00", type = "string")
     LocalTime startTime,
 
     @NotNull
-    @Schema(description = "Horário de fim (exatamente 1 hora após o início)", example = "10:00")
+    @Schema(description = "Horário de fim (exatamente 1 hora após o início)", example = "10:00", type = "string")
     LocalTime endTime
 ) {}

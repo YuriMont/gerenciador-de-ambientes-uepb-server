@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ReserveStatus, UserRole } from "@/api/types";
+import type { ReserveStatus } from "@/generated/models/reserveStatus";
+import type { RoleName } from "@/generated/models/roleName";
 import { cn } from "@/lib/utils";
 
 /**
@@ -72,17 +73,18 @@ export function StatusBadge({
   status,
   className,
 }: {
-  status: ReserveStatus;
+  status: ReserveStatus | undefined;
   className?: string;
 }) {
+  const resolved = status ?? "PENDING";
   return (
-    <ToneBadge tone={STATUS_TONE[status]} className={className}>
-      {STATUS_LABEL[status]}
+    <ToneBadge tone={STATUS_TONE[resolved]} className={className}>
+      {STATUS_LABEL[resolved]}
     </ToneBadge>
   );
 }
 
-const ROLE_TONE: Record<UserRole, Tone> = {
+const ROLE_TONE: Record<RoleName, Tone> = {
   USER: "neutral",
   ADMIN: "accent",
   OWNER: "success",
@@ -93,7 +95,7 @@ export function RoleBadge({
   role,
   className,
 }: {
-  role: UserRole;
+  role: RoleName;
   className?: string;
 }) {
   return (

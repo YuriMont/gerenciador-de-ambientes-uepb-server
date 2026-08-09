@@ -1,8 +1,8 @@
 import { Search, UserPlus, Users } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { useCreateAdministrator, useUsers } from "@/api/persons";
-import type { UserRole } from "@/api/types";
+import { useAllUsers, useCreateAdministrator } from "@/generated/api/users/users";
+import type { RoleName } from "@/generated/models/roleName";
 import { PageHeader } from "@/components/app-shell";
 import { Panel } from "@/components/panel";
 import { RoleBadge, ToneBadge } from "@/components/status-badge";
@@ -42,8 +42,9 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { apiErrorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { formatDayMonthYear, initials } from "@/lib/format";
+import { useInvalidatePersons } from "@/lib/queries";
 
-type Filter = "todos" | UserRole;
+type Filter = "todos" | RoleName;
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "todos", label: "Todos" },
@@ -52,7 +53,7 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: "OWNER", label: "OWNER" },
 ];
 
-const PERMISSIONS: { role: UserRole; description: string }[] = [
+const PERMISSIONS: { role: RoleName; description: string }[] = [
   { role: "USER", description: "Solicita e acompanha as próprias reservas." },
   {
     role: "ADMIN",
@@ -67,6 +68,7 @@ const PERMISSIONS: { role: UserRole; description: string }[] = [
 
 /** Formulário lateral de criação de administrador. Exclusivo do perfil OWNER. */
 function CreateAdminPanel() {
+  const invalidatePersons = useInvalidatePersons();
   const createAdministrator = useCreateAdministrator();
 
   const [name, setName] = useState("");
@@ -84,9 +86,12 @@ function CreateAdminPanel() {
     }
 
     createAdministrator.mutate(
-      { name: name.trim(), email: email.trim(), password },
+      {
+        data: { name: name.trim(), email: email.trim(), password },
+      },
       {
         onSuccess: () => {
+          invalidatePersons();
           toast.success("Administrador criado.");
           setName("");
           setEmail("");
@@ -166,12 +171,12 @@ function CreateAdminPanel() {
 
 export default function UsersPage() {
   const { isOwner } = useAuth();
-  const { data, isLoading } = useUsers();
+  const { data, isLoading } = useAllUsers();
 
   const [filter, setFilter] = useState<Filter>("todos");
   const [search, setSearch] = useState("");
 
-  const users = useMemo(() => data ?? [], [data]);
+  const users = useMemo(() => data?.data ?? [], [data]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");

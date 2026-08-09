@@ -1,6 +1,3 @@
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
-import { useState, type FormEvent } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Brand } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +16,9 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { apiErrorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 /** Painel ilustrativo: um dia de agenda com quatro horários já confirmados. */
 export function AgendaTeaser() {
@@ -143,7 +143,7 @@ export default function LoginPage() {
               type="email"
               autoComplete="email"
               required
-              placeholder="maria.rodrigues@uepb.edu.br"
+              placeholder="usuario@uepb.edu.br"
               value={email}
               aria-invalid={Boolean(error)}
               onChange={(event) => setEmail(event.target.value)}

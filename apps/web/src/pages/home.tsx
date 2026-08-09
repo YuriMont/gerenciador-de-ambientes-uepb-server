@@ -13,12 +13,13 @@ import {
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  useApproveReserve,
+  useApprove,
   useDashboard,
-  useMyReserves,
-  useRejectReserve,
-} from "@/api/reserves";
-import type { EnvironmentUsage, Reserve } from "@/api/types";
+  useFindMine,
+  useReject,
+} from "@/generated/api/reserves/reserves";
+import type { EnvironmentUsageResponse } from "@/generated/models/environmentUsageResponse";
+import type { ReserveResponse } from "@/generated/models/reserveResponse";
 import { PageHeader } from "@/components/app-shell";
 import { Panel } from "@/components/panel";
 import { StatCard } from "@/components/stat-card";
@@ -45,16 +46,18 @@ import {
   initials,
   todayIso,
 } from "@/lib/format";
+import { useInvalidateReserves } from "@/lib/queries";
 
 /** Linha da agenda do dia: faixa de horário, ambiente, solicitante e status. */
-function ScheduleRow({ reserve }: { reserve: Reserve }) {
-  const start = reserve.slots.reduce(
-    (min, slot) => (slot.startTime < min ? slot.startTime : min),
-    reserve.slots[0]?.startTime ?? "08:00:00",
+function ScheduleRow({ reserve }: { reserve: ReserveResponse }) {
+  const slots = reserve.slots ?? [];
+  const start = slots.reduce(
+    (min, slot) => ((slot.startTime ?? min) < min ? slot.startTime ?? min : min),
+    slots[0]?.startTime ?? "08:00:00",
   );
-  const end = reserve.slots.reduce(
-    (max, slot) => (slot.endTime > max ? slot.endTime : max),
-    reserve.slots[0]?.endTime ?? "09:00:00",
+  const end = slots.reduce(
+    (max, slot) => ((slot.endTime ?? max) > max ? slot.endTime ?? max : max),
+    slots[0]?.endTime ?? "09:00:00",
   );
 
   return (
@@ -83,26 +86,39 @@ function ScheduleRow({ reserve }: { reserve: Reserve }) {
 }
 
 /** Item da fila de aprovação exibido no painel lateral. */
-function PendingRow({ reserve }: { reserve: Reserve }) {
-  const approve = useApproveReserve();
-  const reject = useRejectReserve();
+function PendingRow({ reserve }: { reserve: ReserveResponse }) {
+  const slots = reserve.slots ?? [];
+  const invalidateReserves = useInvalidateReserves();
+  const approve = useApprove();
+  const reject = useReject();
   const isBusy = approve.isPending || reject.isPending;
 
   function handleApprove() {
-    approve.mutate(reserve.id, {
-      onSuccess: () => toast.success("Reserva aprovada."),
-      onError: (error) =>
-        toast.error(apiErrorMessage(error, "Não foi possível aprovar.")),
-    });
+    approve.mutate(
+      { reserveId: reserve.id ?? "" },
+      {
+        onSuccess: () => {
+          invalidateReserves();
+          toast.success("Reserva aprovada.");
+        },
+        onError: (error) =>
+          toast.error(apiErrorMessage(error, "Não foi possível aprovar.")),
+      },
+    );
   }
 
   function handleReject() {
-    reject.mutate(reserve.id, {
-      onSuccess: () =>
-        toast.success("Reserva recusada. O horário voltou a ficar livre."),
-      onError: (error) =>
-        toast.error(apiErrorMessage(error, "Não foi possível recusar.")),
-    });
+    reject.mutate(
+      { reserveId: reserve.id ?? "" },
+      {
+        onSuccess: () => {
+          invalidateReserves();
+          toast.success("Reserva recusada. O horário voltou a ficar livre.");
+        },
+        onError: (error) =>
+          toast.error(apiErrorMessage(error, "Não foi possível recusar.")),
+      },
+    );
   }
 
   return (
@@ -118,8 +134,8 @@ function PendingRow({ reserve }: { reserve: Reserve }) {
           {reserve.environmentName ?? "Ambiente removido"}
         </span>
         <span className="truncate text-xs text-muted-foreground">
-          {reserve.userName ?? "—"} · {formatShortDate(reserve.date)} ·{" "}
-          {formatSlotRange(reserve.slots)}
+          {reserve.userName ?? "—"} · {formatShortDate(reserve.date ?? "")} ·{" "}
+          {formatSlotRange(slots)}
         </span>
       </div>
 
@@ -150,8 +166,9 @@ function PendingRow({ reserve }: { reserve: Reserve }) {
 }
 
 /** Barra do ranking de ambientes mais reservados no mês. */
-function UsageBar({ usage, max }: { usage: EnvironmentUsage; max: number }) {
-  const percentage = max === 0 ? 0 : Math.round((usage.hours / max) * 100);
+function UsageBar({ usage, max }: { usage: EnvironmentUsageResponse; max: number }) {
+  const hours = usage.hours ?? 0;
+  const percentage = max === 0 ? 0 : Math.round((hours / max) * 100);
 
   return (
     <li className="flex flex-col gap-1.5">
@@ -159,7 +176,7 @@ function UsageBar({ usage, max }: { usage: EnvironmentUsage; max: number }) {
         <span className="truncate text-xs font-medium text-foreground">
           {usage.name ?? "Ambiente removido"}
         </span>
-        <span className="shrink-0 text-xs text-subtle">{usage.hours} h</span>
+        <span className="shrink-0 text-xs text-subtle">{hours} h</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-muted">
         <div
@@ -176,8 +193,10 @@ function AdminHome() {
   const { data, isLoading } = useDashboard();
 
   const topMax =
-    data?.topEnvironments.reduce((max, item) => Math.max(max, item.hours), 0) ??
-    0;
+    data?.data?.topEnvironments?.reduce(
+      (max, item) => Math.max(max, item.hours ?? 0),
+      0,
+    ) ?? 0;
 
   return (
     <>
@@ -190,22 +209,22 @@ function AdminHome() {
           <>
             <StatCard
               icon={Hourglass}
-              value={data?.pendingCount ?? 0}
+              value={data?.data?.pendingCount ?? 0}
               label="Aguardando sua aprovação"
             />
             <StatCard
               icon={CalendarCheck}
-              value={data?.approvedToday ?? 0}
+              value={data?.data?.approvedToday ?? 0}
               label="Confirmadas para hoje"
             />
             <StatCard
               icon={Building2}
-              value={data?.environmentCount ?? 0}
+              value={data?.data?.environmentCount ?? 0}
               label="Ambientes ativos"
             />
             <StatCard
               icon={TrendingUp}
-              value={`${data?.weeklyOccupancyRate ?? 0}%`}
+              value={`${data?.data?.weeklyOccupancyRate ?? 0}%`}
               label="Ocupação média da semana"
             />
           </>
@@ -215,13 +234,13 @@ function AdminHome() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Panel
           title="Agenda de hoje"
-          description={`${data?.approvedToday ?? 0} reservas confirmadas · 08:00 às 22:00`}
+          description={`${data?.data?.approvedToday ?? 0} reservas confirmadas · 08:00 às 22:00`}
         >
           {isLoading ? (
             <Skeleton className="h-56" />
-          ) : data && data.todaySchedule.length > 0 ? (
+          ) : data?.data && (data.data.todaySchedule?.length ?? 0) > 0 ? (
             <ul className="flex flex-col">
-              {data.todaySchedule.map((reserve) => (
+              {(data.data.todaySchedule ?? []).map((reserve) => (
                 <ScheduleRow key={reserve.id} reserve={reserve} />
               ))}
             </ul>
@@ -244,7 +263,7 @@ function AdminHome() {
         <div className="flex min-w-0 flex-col gap-4">
           <Panel
             title="Aguardando você"
-            description={`${data?.pendingCount ?? 0} pedidos na fila`}
+            description={`${data?.data?.pendingCount ?? 0} pedidos na fila`}
             action={
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/aprovacoes">
@@ -256,9 +275,9 @@ function AdminHome() {
           >
             {isLoading ? (
               <Skeleton className="h-40" />
-            ) : data && data.pendingQueue.length > 0 ? (
+            ) : data?.data && (data.data.pendingQueue?.length ?? 0) > 0 ? (
               <ul className="flex flex-col">
-                {data.pendingQueue.slice(0, 3).map((reserve) => (
+                {(data.data.pendingQueue ?? []).slice(0, 3).map((reserve) => (
                   <PendingRow key={reserve.id} reserve={reserve} />
                 ))}
               </ul>
@@ -272,9 +291,9 @@ function AdminHome() {
           <Panel title="Mais reservados no mês">
             {isLoading ? (
               <Skeleton className="h-32" />
-            ) : data && data.topEnvironments.length > 0 ? (
+            ) : data?.data && (data.data.topEnvironments?.length ?? 0) > 0 ? (
               <ul className="flex flex-col gap-3.5">
-                {data.topEnvironments.map((usage) => (
+                {(data.data.topEnvironments ?? []).map((usage) => (
                   <UsageBar
                     key={usage.environmentId}
                     usage={usage}
@@ -296,18 +315,18 @@ function AdminHome() {
 
 /** Painel de quem só solicita: contadores das próprias reservas e os próximos horários. */
 function UserHome() {
-  const { data, isLoading } = useMyReserves();
+  const { data, isLoading } = useFindMine();
 
-  const reserves = data ?? [];
+  const reserves = data?.data ?? [];
   const pending = reserves.filter((reserve) => reserve.status === "PENDING");
   const approved = reserves.filter((reserve) => reserve.status === "APPROVED");
   const hours = approved.reduce(
-    (total, reserve) => total + reserve.slots.length,
+    (total, reserve) => total + (reserve.slots?.length ?? 0),
     0,
   );
   const upcoming = approved
-    .filter((reserve) => reserve.date >= todayIso())
-    .sort((a, b) => a.date.localeCompare(b.date));
+    .filter((reserve) => (reserve.date ?? "") >= todayIso())
+    .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
 
   return (
     <>
@@ -360,10 +379,10 @@ function UserHome() {
               >
                 <div className="flex w-24 shrink-0 flex-col text-xs">
                   <span className="font-semibold text-foreground">
-                    {formatShortDate(reserve.date)}
+                    {formatShortDate(reserve.date ?? "")}
                   </span>
                   <span className="text-subtle">
-                    {formatSlotRange(reserve.slots)}
+                    {formatSlotRange(reserve.slots ?? [])}
                   </span>
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col">
@@ -399,9 +418,9 @@ function UserHome() {
 
 export default function HomePage() {
   const { user, isAdmin } = useAuth();
-  const { data: dashboard } = useDashboard(isAdmin);
+  const { data: dashboard } = useDashboard({ query: { enabled: isAdmin } });
 
-  const pendingCount = dashboard?.pendingCount ?? 0;
+  const pendingCount = dashboard?.data?.pendingCount ?? 0;
   const subtitle = isAdmin
     ? `${formatLongDate(new Date())} · ${pendingCount} ${
         pendingCount === 1 ? "pedido espera" : "pedidos esperam"

@@ -11,7 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
-import { useDashboard } from "@/api/reserves";
+import { useDashboard } from "@/generated/api/reserves/reserves";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -169,8 +169,8 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   const { user, isAdmin, signOut } = useAuth();
-  const { data: dashboard } = useDashboard(isAdmin);
-  const pendingCount = dashboard?.pendingCount ?? 0;
+  const { data: dashboard } = useDashboard({ query: { enabled: isAdmin } });
+  const pendingCount = dashboard?.data?.pendingCount ?? 0;
 
   return (
     <header className="sticky top-0 z-30 flex min-h-18 flex-wrap items-center gap-3 border-b border-border bg-background px-5 py-3 lg:px-8">

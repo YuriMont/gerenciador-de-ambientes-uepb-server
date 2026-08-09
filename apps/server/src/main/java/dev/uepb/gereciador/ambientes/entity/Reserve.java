@@ -101,11 +101,11 @@ public class Reserve {
     public static class Slot {
 
         /** Horário de início do slot (formato HH:mm). */
-        @Schema(description = "Horário de início", example = "09:00")
+        @Schema(description = "Horário de início", example = "09:00", type = "string")
         private LocalTime startTime;
 
         /** Horário de fim do slot (formato HH:mm). */
-        @Schema(description = "Horário de fim", example = "10:00")
+        @Schema(description = "Horário de fim", example = "10:00", type = "string")
         private LocalTime endTime;
 
         /**

@@ -1,9 +1,9 @@
 import { createContext, useContext } from "react";
-import type { CurrentUser } from "@/api/types";
+import type { UserResponse } from "@/generated/models";
 
 export interface AuthContextValue {
   /** Usuário autenticado, ou `undefined` enquanto carrega ou se não houver sessão. */
-  user: CurrentUser | undefined;
+  user: UserResponse | undefined;
   /** Verdadeiro enquanto os dados da sessão ainda estão sendo carregados. */
   isLoading: boolean;
   /** Verdadeiro quando há um token guardado. */

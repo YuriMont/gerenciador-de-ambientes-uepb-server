@@ -12,9 +12,13 @@ import {
 import { useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useCreateEnvironment, useEnvironments } from "@/api/environments";
-import { useAllAvailability, useDashboard } from "@/api/reserves";
-import type { Environment, EnvironmentAvailability } from "@/api/types";
+import { useCreate1, useFindAll1 } from "@/generated/api/environments/environments";
+import {
+  useAvailabilityForAll,
+  useDashboard,
+} from "@/generated/api/reserves/reserves";
+import type { Environment } from "@/generated/models/environment";
+import type { EnvironmentAvailabilityResponse } from "@/generated/models/environmentAvailabilityResponse";
 import { PageHeader } from "@/components/app-shell";
 import { MiniAgenda } from "@/components/mini-agenda";
 import { StatCard } from "@/components/stat-card";
@@ -57,6 +61,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { apiErrorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { todayIso } from "@/lib/format";
+import { useInvalidateEnvironments } from "@/lib/queries";
 
 type Category = "todos" | "salas" | "laboratorios" | "auditorios";
 
@@ -79,19 +84,34 @@ function categoryOf(environment: Environment): Category {
   return "todos";
 }
 
+/** Confere se o texto é uma URL de imagem válida (http/https). */
+function isValidImageUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 /** Formulário de criação de ambiente, aberto a partir do botão do cabeçalho. */
 function NewEnvironmentDialog() {
-  const createEnvironment = useCreateEnvironment();
+  const invalidateEnvironments = useInvalidateEnvironments();
+  const createEnvironment = useCreate1();
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [capacity, setCapacity] = useState("");
   const [block, setBlock] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const isIncomplete =
     !name.trim() || !description.trim() || !capacity.trim() || !block.trim();
+
+  const imageInvalid =
+    imageUrl.trim().length > 0 && !isValidImageUrl(imageUrl.trim());
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
@@ -100,6 +120,7 @@ function NewEnvironmentDialog() {
       setDescription("");
       setCapacity("");
       setBlock("");
+      setImageUrl("");
       setError(null);
     }
   }
@@ -107,6 +128,11 @@ function NewEnvironmentDialog() {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+
+    if (imageInvalid) {
+      setError("Informe uma URL válida de imagem (ex.: https://…).");
+      return;
+    }
 
     const seats = Number(capacity);
     if (!Number.isInteger(seats) || seats < 1) {
@@ -118,13 +144,17 @@ function NewEnvironmentDialog() {
 
     createEnvironment.mutate(
       {
-        name: name.trim(),
-        description: description.trim(),
-        capacity: seats,
-        block: block.trim(),
+        data: {
+          name: name.trim(),
+          description: description.trim(),
+          capacity: seats,
+          block: block.trim(),
+          imageUrl: imageUrl.trim() || undefined,
+        },
       },
       {
         onSuccess: () => {
+          invalidateEnvironments();
           toast.success("Ambiente criado. Já está disponível para reserva.");
           handleOpenChange(false);
         },
@@ -224,6 +254,40 @@ function NewEnvironmentDialog() {
               {error && <FieldError>{error}</FieldError>}
             </Field>
 
+            <Field data-invalid={imageInvalid ? true : undefined}>
+              <FieldLabel htmlFor="environment-image">
+                Imagem do ambiente
+              </FieldLabel>
+              <div className="flex h-28 items-center justify-center overflow-hidden rounded-xl border border-border bg-accent-soft">
+                {imageUrl.trim() && !imageInvalid ? (
+                  <img
+                    src={imageUrl.trim()}
+                    alt="Prévia da imagem do ambiente"
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <Building2 className="size-7 text-accent-strong/60" />
+                )}
+              </div>
+              <Input
+                id="environment-image"
+                type="url"
+                placeholder="https://…/foto-do-ambiente.jpg"
+                value={imageUrl}
+                aria-invalid={imageInvalid || undefined}
+                onChange={(event) => setImageUrl(event.target.value)}
+              />
+              <FieldDescription>
+                Cole a URL de uma foto do espaço. Opcional — sem imagem, o card
+                usa um ícone.
+              </FieldDescription>
+              {imageInvalid && (
+                <FieldError>
+                  Informe uma URL válida (ex.: https://…).
+                </FieldError>
+              )}
+            </Field>
+
             <Alert>
               <Info />
               <AlertDescription>
@@ -262,7 +326,7 @@ function EnvironmentCard({
   availability,
 }: {
   environment: Environment;
-  availability?: EnvironmentAvailability;
+  availability?: EnvironmentAvailabilityResponse;
 }) {
   return (
     <Link
@@ -332,9 +396,12 @@ export default function EnvironmentsPage() {
   const { isAdmin } = useAuth();
   const today = todayIso();
 
-  const { data: environments, isLoading } = useEnvironments();
-  const { data: availability } = useAllAvailability(today);
-  const { data: dashboard } = useDashboard(isAdmin);
+  const { data: environmentsResponse, isLoading } = useFindAll1();
+  const { data: availabilityResponse } = useAvailabilityForAll({ date: today });
+  const { data: dashboard } = useDashboard({ query: { enabled: isAdmin } });
+
+  const environments = environmentsResponse?.data;
+  const availability = availabilityResponse?.data;
 
   const [category, setCategory] = useState<Category>("todos");
   const [search, setSearch] = useState("");
@@ -389,7 +456,7 @@ export default function EnvironmentsPage() {
           />
           <StatCard
             icon={Hourglass}
-            value={dashboard?.pendingCount ?? "—"}
+            value={dashboard?.data?.pendingCount ?? "—"}
             label="Aguardando aprovação"
           />
         </div>

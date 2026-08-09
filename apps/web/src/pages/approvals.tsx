@@ -1,12 +1,8 @@
 import { Check, Info, Mail, Search, ShieldCheck, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-  useApproveReserve,
-  useRejectReserve,
-  useReserves,
-} from "@/api/reserves";
-import type { Reserve } from "@/api/types";
+import { useApprove, useFindAll, useReject } from "@/generated/api/reserves/reserves";
+import type { ReserveResponse } from "@/generated/models/reserveResponse";
 import { PageHeader } from "@/components/app-shell";
 import { Panel } from "@/components/panel";
 import { StatusBadge } from "@/components/status-badge";
@@ -37,6 +33,7 @@ import {
   formatTime,
   initials,
 } from "@/lib/format";
+import { useInvalidateReserves } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 /** Cartão de um pedido na fila, à esquerda. */
@@ -45,7 +42,7 @@ function QueueItem({
   isSelected,
   onSelect,
 }: {
-  reserve: Reserve;
+  reserve: ReserveResponse;
   isSelected: boolean;
   onSelect: () => void;
 }) {
@@ -100,27 +97,38 @@ function QueueItem({
 }
 
 /** Painel de detalhe do pedido selecionado, com as duas ações de decisão. */
-function RequestDetail({ reserve }: { reserve: Reserve }) {
-  const approve = useApproveReserve();
-  const reject = useRejectReserve();
+function RequestDetail({ reserve }: { reserve: ReserveResponse }) {
+  const invalidateReserves = useInvalidateReserves();
+  const approve = useApprove();
+  const reject = useReject();
   const isBusy = approve.isPending || reject.isPending;
 
   function handleApprove() {
-    approve.mutate(reserve.id, {
-      onSuccess: () =>
-        toast.success("Reserva aprovada. Os horários foram bloqueados."),
-      onError: (error) =>
-        toast.error(apiErrorMessage(error, "Não foi possível aprovar.")),
-    });
+    approve.mutate(
+      { reserveId: reserve.id ?? "" },
+      {
+        onSuccess: () => {
+          invalidateReserves();
+          toast.success("Reserva aprovada. Os horários foram bloqueados.");
+        },
+        onError: (error) =>
+          toast.error(apiErrorMessage(error, "Não foi possível aprovar.")),
+      },
+    );
   }
 
   function handleReject() {
-    reject.mutate(reserve.id, {
-      onSuccess: () =>
-        toast.success("Reserva recusada. O horário voltou a ficar livre."),
-      onError: (error) =>
-        toast.error(apiErrorMessage(error, "Não foi possível recusar.")),
-    });
+    reject.mutate(
+      { reserveId: reserve.id ?? "" },
+      {
+        onSuccess: () => {
+          invalidateReserves();
+          toast.success("Reserva recusada. O horário voltou a ficar livre.");
+        },
+        onError: (error) =>
+          toast.error(apiErrorMessage(error, "Não foi possível recusar.")),
+      },
+    );
   }
 
   return (
@@ -225,15 +233,16 @@ function RequestDetail({ reserve }: { reserve: Reserve }) {
 }
 
 export default function ApprovalsPage() {
-  const { data, isLoading } = useReserves({ status: "PENDING" });
+  const { data, isLoading } = useFindAll({ status: "PENDING" });
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const queue = useMemo(() => {
+    const reserves = data?.data ?? [];
     const term = search.trim().toLocaleLowerCase("pt-BR");
-    if (!term) return data ?? [];
+    if (!term) return reserves;
 
-    return (data ?? []).filter(
+    return reserves.filter(
       (reserve) =>
         (reserve.userName ?? "").toLocaleLowerCase("pt-BR").includes(term) ||
         (reserve.environmentName ?? "")
@@ -246,7 +255,7 @@ export default function ApprovalsPage() {
   // aberto sai da lista — o que acontece assim que ele é aprovado ou recusado.
   const selected =
     queue.find((reserve) => reserve.id === selectedId) ?? queue[0];
-  const pendingCount = data?.length ?? 0;
+  const pendingCount = data?.data?.length ?? 0;
 
   return (
     <>

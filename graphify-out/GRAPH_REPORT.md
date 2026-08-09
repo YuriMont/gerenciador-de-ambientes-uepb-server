@@ -1,21 +1,21 @@
 # Graph Report - gerenciador-de-ambientes-uepb  (2026-08-09)
 
 ## Corpus Check
-- 80 files · ~32,220 words
+- 133 files · ~56,527 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 685 nodes · 1003 edges · 47 communities (44 shown, 3 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 33 edges (avg confidence: 0.8)
+- 1084 nodes · 2268 edges · 70 communities (67 shown, 3 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 51 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e8dd93d3`
+- Built from commit: `47db4cd2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- User
+- Role
 - Environment
 - ReserveController.java
 - devDependencies
@@ -35,7 +35,7 @@
 - Customization & Theming
 - Component Composition
 - Styling & Customization
-- SecurityFilter.java
+- input-group.tsx
 - Tools
 - mvnw
 - package.json
@@ -50,67 +50,89 @@
 - Icons
 - AmbientesApplication
 - AmbientesApplicationTests.java
-- main.tsx
-- button.tsx
-- api.ts
+- auth-context.ts
+- reserve.tsx
+- status-badge.tsx
 - tsconfig.json
-- React + TypeScript + Vite
 - opencode.json
 - graphify.js
 - dev.uepb.gereciador:ambientes
+- approvals.tsx
+- environments.tsx
+- my-reserves.tsx
+- users.tsx
+- PersonServiceTest.java
+- format.ts
+- PersonService
+- User
+- Gerenciador de Ambientes UEPB — Web
+- App.tsx
+- 🛠️ Como Executar
+- UserRepository
+- Endpoints disponíveis
+- Como rodar
+- 🧪 Exemplo de uso rápido
+- Prioridade Graphify
+- formatTime
+- types.ts
+- TestDataSeeder.java
+- cn
+- main.tsx
+- alert.tsx
+- utils.ts
 
 ## God Nodes (most connected - your core abstractions)
-1. `User` - 25 edges
-2. `Environment` - 22 edges
-3. `Role` - 19 edges
-4. `compilerOptions` - 19 edges
-5. `compilerOptions` - 15 edges
-6. `Reserve` - 14 edges
-7. `UserRepository` - 14 edges
-8. `SaveEnvironmentRequest` - 13 edges
-9. `RoleRepository` - 13 edges
-10. `Component Composition` - 13 edges
+1. `cn()` - 141 edges
+2. `User` - 39 edges
+3. `Environment` - 27 edges
+4. `Reserve` - 26 edges
+5. `ReserveService` - 26 edges
+6. `ReserveStatus` - 22 edges
+7. `Role` - 21 edges
+8. `UserRole` - 20 edges
+9. `compilerOptions` - 19 edges
+10. `ReserveController` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `AuthConfig` --references--> `UserRepository`  [EXTRACTED]
-  apps/server/src/main/java/dev/uepb/gereciador/ambientes/config/AuthConfig.java → apps/server/src/main/java/dev/uepb/gereciador/ambientes/repository/UserRepository.java
-- `SecurityFilter` --references--> `AuthConfig`  [EXTRACTED]
-  apps/server/src/main/java/dev/uepb/gereciador/ambientes/config/SecurityFilter.java → apps/server/src/main/java/dev/uepb/gereciador/ambientes/config/AuthConfig.java
-- `PersonController` --references--> `AuthConfig`  [EXTRACTED]
-  apps/server/src/main/java/dev/uepb/gereciador/ambientes/controller/PersonController.java → apps/server/src/main/java/dev/uepb/gereciador/ambientes/config/AuthConfig.java
-- `SecurityConfig` --references--> `SecurityFilter`  [EXTRACTED]
-  apps/server/src/main/java/dev/uepb/gereciador/ambientes/config/SecurityConfig.java → apps/server/src/main/java/dev/uepb/gereciador/ambientes/config/SecurityFilter.java
-- `SecurityFilter` --references--> `TokenConfig`  [EXTRACTED]
-  apps/server/src/main/java/dev/uepb/gereciador/ambientes/config/SecurityFilter.java → apps/server/src/main/java/dev/uepb/gereciador/ambientes/config/TokenConfig.java
+- `NavItemLink()` --calls--> `cn()`  [EXTRACTED]
+  apps/web/src/components/app-shell.tsx → apps/web/src/lib/utils.ts
+- `AlertTitle()` --calls--> `cn()`  [EXTRACTED]
+  apps/web/src/components/ui/alert.tsx → apps/web/src/lib/utils.ts
+- `AlertAction()` --calls--> `cn()`  [EXTRACTED]
+  apps/web/src/components/ui/alert.tsx → apps/web/src/lib/utils.ts
+- `DialogOverlay()` --calls--> `cn()`  [EXTRACTED]
+  apps/web/src/components/ui/dialog.tsx → apps/web/src/lib/utils.ts
+- `DropdownMenuCheckboxItem()` --calls--> `cn()`  [EXTRACTED]
+  apps/web/src/components/ui/dropdown-menu.tsx → apps/web/src/lib/utils.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (47 total, 3 thin omitted)
+## Communities (70 total, 3 thin omitted)
 
-### Community 0 - "User"
-Cohesion: 0.08
-Nodes (39): AllArgsConstructor, ApplicationListener, Schema, RegisterUserRequest, Document, Getter, NoArgsConstructor, Schema (+31 more)
+### Community 0 - "Role"
+Cohesion: 0.15
+Nodes (18): AllArgsConstructor, ApplicationListener, Document, Getter, NoArgsConstructor, Schema, Setter, Role (+10 more)
 
 ### Community 1 - "Environment"
-Cohesion: 0.10
-Nodes (30): EnvironmentController, ApiResponses, GetMapping, Operation, PostMapping, RequestMapping, ResponseEntity, RestController (+22 more)
+Cohesion: 0.09
+Nodes (34): EnvironmentController, ApiResponses, DeleteMapping, GetMapping, Operation, PostMapping, PreAuthorize, RequestMapping (+26 more)
 
 ### Community 2 - "ReserveController.java"
-Cohesion: 0.08
-Nodes (35): AuthConfig, Override, Service, UserDetails, ApiResponses, GetMapping, Operation, PostMapping (+27 more)
+Cohesion: 0.05
+Nodes (52): ApiResponses, DeleteMapping, GetMapping, Operation, PostMapping, PreAuthorize, RequestMapping, ResponseEntity (+44 more)
 
 ### Community 3 - "devDependencies"
-Cohesion: 0.05
-Nodes (42): devDependencies, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals, orval, @tanstack/eslint-plugin-query (+34 more)
+Cohesion: 0.04
+Nodes (44): devDependencies, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals, orval, prettier (+36 more)
 
 ### Community 4 - "dependencies"
-Cohesion: 0.06
-Nodes (35): dependencies, axios, class-variance-authority, clsx, @fontsource-variable/inter, jotai, lucide-react, radix-ui (+27 more)
+Cohesion: 0.05
+Nodes (41): dependencies, axios, class-variance-authority, clsx, @fontsource-variable/inter, jotai, lucide-react, next-themes (+33 more)
 
 ### Community 5 - "Gerenciador de Ambientes UEPB — Server"
-Cohesion: 0.07
-Nodes (26): 1. Clonar o repositório, 1. Registrar usuário, 2. Configurar variáveis de ambiente, 2. Fazer login, 3. Criar reserva, 3. Executar a aplicação, 4. Consultar slots disponíveis, 4. Executar os testes (+18 more)
+Cohesion: 0.25
+Nodes (8): 📐 Arquitetura, 🔐 Autenticação, 🗂️ Coleções MongoDB, 📝 Convenções e observações, Gerenciador de Ambientes UEPB — Server, Perfis de acesso, 🗓️ Regras de Negócio — Reservas, 🚀 Tecnologias
 
 ### Community 6 - "AuthController.java"
 Cohesion: 0.14
@@ -129,28 +151,28 @@ Cohesion: 0.10
 Nodes (19): compilerOptions, allowImportingTsExtensions, erasableSyntaxOnly, lib, module, moduleDetection, noEmit, noFallthroughCasesInSwitch (+11 more)
 
 ### Community 10 - "AGENTS.md"
-Cohesion: 0.11
-Nodes (17): `apps/server/` — Backend Spring Boot, `apps/web/` — Frontend (Vite + React + TypeScript), Arquitetura do backend (estrutura de diretórios), Backend (apps/server/), Como rodar, Convensões de código, Estrutura do monorepo, Frontend (apps/web/) (+9 more)
+Cohesion: 0.09
+Nodes (21): `apps/server/` — Backend Spring Boot, `apps/web/` — Frontend, Armadilhas conhecidas, Arquitetura do backend, Backend (`apps/server/`), Como rodar, Convenções de código, Convenções do design (+13 more)
 
 ### Community 11 - "shadcn/ui"
 Cohesion: 0.11
 Nodes (19): Chat & Messaging → [chat.md](./rules/chat.md), CLI, Component Docs, Examples, and Usage, Component Selection, Component Structure → [composition.md](./rules/composition.md), Critical Rules, Current Project Context, Detailed References (+11 more)
 
 ### Community 12 - "PersonController.java"
-Cohesion: 0.25
-Nodes (13): ApiResponses, GetMapping, Operation, PostMapping, RequestMapping, ResponseEntity, RestController, SecurityRequirement (+5 more)
+Cohesion: 0.23
+Nodes (13): ApiResponses, GetMapping, Operation, PostMapping, PreAuthorize, RequestMapping, ResponseEntity, RestController (+5 more)
 
 ### Community 13 - "Commands"
 Cohesion: 0.12
 Nodes (17): `add` — Add components, `apply` — Apply a preset to an existing project, `build` — Build a custom registry, Commands, Contents, `diff` — Check for updates, `docs` — Get component documentation URLs, Dry-Run Mode (+9 more)
 
 ### Community 14 - "SecurityConfig.java"
-Cohesion: 0.25
-Nodes (11): AuthenticationManager, Bean, Configuration, PasswordEncoder, SecurityConfig, AuthenticationConfiguration, EnableMethodSecurity, EnableWebSecurity (+3 more)
+Cohesion: 0.12
+Nodes (20): JWTUserData, AuthenticationManager, Bean, Configuration, PasswordEncoder, SecurityConfig, Component, Override (+12 more)
 
 ### Community 15 - "Gerenciador de Ambientes UEPB"
-Cohesion: 0.13
-Nodes (14): 1. Configure o ambiente, 2. Backend (server), 3. Testes, 4. Frontend (web), Autenticação, Como rodar, Documentação da API, Endpoints principais (+6 more)
+Cohesion: 0.18
+Nodes (11): API, Autenticação, Design, Estado atual, Estrutura, Gerenciador de Ambientes UEPB, Pontos de atenção, Regras de negócio (reservas) (+3 more)
 
 ### Community 16 - "Find Skills"
 Cohesion: 0.14
@@ -168,9 +190,9 @@ Nodes (13): Avatar always needs AvatarFallback, Button has no isPending or isLoa
 Cohesion: 0.15
 Nodes (13): Built-in variants first, className for layout only, Contents, No manual dark: color overrides, No manual z-index on overlay components, No raw color values for status/state indicators, No space-x-* / space-y-*, Prefer size-* over w-* h-* when equal (+5 more)
 
-### Community 20 - "SecurityFilter.java"
-Cohesion: 0.23
-Nodes (9): JWTUserData, Component, Override, SecurityFilter, Builder, FilterChain, HttpServletRequest, HttpServletResponse (+1 more)
+### Community 20 - "input-group.tsx"
+Cohesion: 0.24
+Nodes (9): InputGroup(), InputGroupAddon(), inputGroupAddonVariants, InputGroupButton(), inputGroupButtonVariants, InputGroupInput(), InputGroupText(), InputGroupTextarea() (+1 more)
 
 ### Community 21 - "Tools"
 Cohesion: 0.17
@@ -228,45 +250,133 @@ Nodes (3): AmbientesApplication, EnableMongoAuditing, SpringBootApplication
 Cohesion: 0.60
 Nodes (3): AmbientesApplicationTests, Test, SpringBootTest
 
-### Community 37 - "button.tsx"
-Cohesion: 0.70
-Nodes (3): Button(), buttonVariants, cn()
+### Community 36 - "auth-context.ts"
+Cohesion: 0.21
+Nodes (12): useCurrentUser(), useUsers(), CurrentUser, RegisterUserRequest, UserSummary, api, customInstance(), TOKEN_KEY (+4 more)
 
-### Community 38 - "api.ts"
-Cohesion: 0.50
-Nodes (4): api, BodyType, customInstance(), ErrorType
+### Community 37 - "reserve.tsx"
+Cohesion: 0.14
+Nodes (21): Field(), FieldContent(), FieldDescription(), FieldError(), FieldGroup(), FieldLabel(), FieldLegend(), FieldSeparator() (+13 more)
+
+### Community 38 - "status-badge.tsx"
+Cohesion: 0.20
+Nodes (11): ReserveStatus, UserRole, dotVariants, ROLE_TONE, RoleBadge(), STATUS_LABEL, STATUS_TONE, StatusBadge() (+3 more)
 
 ### Community 39 - "tsconfig.json"
 Cohesion: 0.40
 Nodes (4): compilerOptions, paths, files, references
 
-### Community 40 - "React + TypeScript + Vite"
-Cohesion: 0.50
-Nodes (3): Expanding the ESLint configuration, React Compiler, React + TypeScript + Vite
-
 ### Community 41 - "opencode.json"
-Cohesion: 0.50
-Nodes (3): plugin, $schema, .opencode/plugins/graphify.js
+Cohesion: 0.33
+Nodes (5): instructions, plugin, $schema, .opencode/instructions.md, .opencode/plugins/graphify.js
+
+### Community 47 - "approvals.tsx"
+Cohesion: 0.20
+Nodes (17): useApproveReserve(), useDashboard(), useInvalidateReserves(), useRejectReserve(), useReserves(), PageHeader(), Panel(), Avatar() (+9 more)
+
+### Community 48 - "environments.tsx"
+Cohesion: 0.13
+Nodes (23): useCreateEnvironment(), Button(), buttonVariants, Dialog(), DialogClose(), DialogContent(), DialogDescription(), DialogFooter() (+15 more)
+
+### Community 49 - "my-reserves.tsx"
+Cohesion: 0.10
+Nodes (22): useCancelReserve(), ADMIN_NAV, Brand(), MAIN_NAV, NavItem, NavItemLink(), TabBar(), StatCard() (+14 more)
+
+### Community 50 - "users.tsx"
+Cohesion: 0.18
+Nodes (14): useCreateAdministrator(), Skeleton(), Table(), TableBody(), TableCaption(), TableCell(), TableFooter(), TableHead() (+6 more)
+
+### Community 51 - "PersonServiceTest.java"
+Cohesion: 0.22
+Nodes (8): Schema, RegisterUserRequest, BeforeEach, ExtendWith, PasswordEncoder, RegisterUserRequest, Test, PersonServiceTest
+
+### Community 52 - "format.ts"
+Cohesion: 0.26
+Nodes (14): useMyReserves(), addDays(), formatDayMonthYear(), formatLongDate(), formatRelative(), formatShortDate(), formatSlotRange(), parseIsoDate() (+6 more)
+
+### Community 53 - "PersonService"
+Cohesion: 0.29
+Nodes (5): Schema, UserSummaryResponse, PasswordEncoder, Service, PersonService
+
+### Community 54 - "User"
+Cohesion: 0.23
+Nodes (8): Document, Getter, Override, Schema, Setter, User, GrantedAuthority, UserDetails
+
+### Community 55 - "Gerenciador de Ambientes UEPB — Web"
+Cohesion: 0.22
+Nodes (9): Client da API (orval), Componentes shadcn, Design system, Dois tropeços conhecidos, Estrutura, Gerenciador de Ambientes UEPB — Web, Rodando, Scripts (+1 more)
+
+### Community 56 - "App.tsx"
+Cohesion: 0.22
+Nodes (12): useEnvironments(), useAllAvailability(), RequireAdmin(), RequireAuth(), AppShell(), useAuth(), categoryOf(), EnvironmentsPage() (+4 more)
+
+### Community 57 - "🛠️ Como Executar"
+Cohesion: 0.25
+Nodes (8): 1. Clonar o repositório, 2. Configurar variáveis de ambiente, 3. Executar a aplicação, 4. Executar os testes, 5. Build do JAR, 6. Acessar, 🛠️ Como Executar, Pré-requisitos
+
+### Community 58 - "UserRepository"
+Cohesion: 0.24
+Nodes (8): AuthConfig, Override, Service, UserDetails, Repository, UserDetails, UserRepository, UserDetailsService
+
+### Community 59 - "Endpoints disponíveis"
+Cohesion: 0.33
+Nodes (6): Ambientes (`/environments`), Autenticação (`/auth`), 📖 Documentação da API (Swagger UI), Endpoints disponíveis, Reservas (`/reserves`), Usuários (`/person`)
+
+### Community 60 - "Como rodar"
+Cohesion: 0.33
+Nodes (6): 1. Variáveis de ambiente, 2. Backend, 3. Frontend, 4. Os dois juntos, 5. Testes, Como rodar
+
+### Community 61 - "🧪 Exemplo de uso rápido"
+Cohesion: 0.40
+Nodes (5): 1. Registrar usuário, 2. Fazer login, 3. Consultar slots disponíveis, 4. Criar reserva, 🧪 Exemplo de uso rápido
+
+### Community 63 - "formatTime"
+Cohesion: 0.67
+Nodes (3): MiniAgenda(), formatTime(), ScheduleRow()
+
+### Community 64 - "types.ts"
+Cohesion: 0.14
+Nodes (16): ENVIRONMENTS_KEY, useEnvironment(), useAvailability(), useCreateReserve(), CreateReserveRequest, Dashboard, Environment, EnvironmentAvailability (+8 more)
+
+### Community 65 - "TestDataSeeder.java"
+Cohesion: 0.25
+Nodes (8): Component, ContextRefreshedEvent, Environment, Override, PasswordEncoder, Slot, TestDataSeeder, Profile
+
+### Community 68 - "cn"
+Cohesion: 0.07
+Nodes (42): AvatarBadge(), AvatarGroup(), AvatarGroupCount(), AvatarImage(), Card(), CardAction(), CardContent(), CardDescription() (+34 more)
+
+### Community 72 - "main.tsx"
+Cohesion: 0.47
+Nodes (3): App(), Toaster(), queryClient
+
+### Community 74 - "alert.tsx"
+Cohesion: 0.40
+Nodes (5): Alert(), AlertAction(), AlertDescription(), AlertTitle(), alertVariants
+
+### Community 75 - "utils.ts"
+Cohesion: 0.27
+Nodes (7): Badge(), badgeVariants, ToggleGroup(), ToggleGroupContext, ToggleGroupItem(), Toggle(), toggleVariants
 
 ## Knowledge Gaps
-- **291 isolated node(s):** `$schema`, `.opencode/plugins/graphify.js`, `dev.uepb.gereciador:ambientes`, `APPROVED`, `REJECTED` (+286 more)
+- **330 isolated node(s):** `$schema`, `.opencode/instructions.md`, `.opencode/plugins/graphify.js`, `dev.uepb.gereciador:ambientes`, `APPROVED` (+325 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `User` connect `User` to `ReserveController.java`, `PersonController.java`, `AuthController.java`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
-- **Why does `UserRepository` connect `User` to `Environment`, `ReserveController.java`, `AuthController.java`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
-- **What connects `$schema`, `.opencode/plugins/graphify.js`, `dev.uepb.gereciador:ambientes` to the rest of the system?**
-  _291 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `User` be split into smaller, more focused modules?**
-  _Cohesion score 0.07570621468926554 - nodes in this community are weakly interconnected._
+- **Why does `dependencies` connect `dependencies` to `devDependencies`?**
+  _High betweenness centrality (0.063) - this node is a cross-community bridge._
+- **Why does `cn()` connect `cn` to `reserve.tsx`, `status-badge.tsx`, `alert.tsx`, `utils.ts`, `approvals.tsx`, `environments.tsx`, `my-reserves.tsx`, `users.tsx`, `input-group.tsx`, `format.ts`, `formatTime`?**
+  _High betweenness centrality (0.061) - this node is a cross-community bridge._
+- **Why does `ToggleGroupItem()` connect `utils.ts` to `dependencies`, `cn`, `environments.tsx`, `my-reserves.tsx`, `users.tsx`?**
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
+- **What connects `$schema`, `.opencode/instructions.md`, `.opencode/plugins/graphify.js` to the rest of the system?**
+  _330 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Environment` be split into smaller, more focused modules?**
-  _Cohesion score 0.09728506787330317 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08701298701298701 - nodes in this community are weakly interconnected._
 - **Should `ReserveController.java` be split into smaller, more focused modules?**
-  _Cohesion score 0.08470588235294117 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0533028745478774 - nodes in this community are weakly interconnected._
 - **Should `devDependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.046511627906976744 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.044444444444444446 - nodes in this community are weakly interconnected._

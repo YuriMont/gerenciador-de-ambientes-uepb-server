@@ -14,6 +14,7 @@ import jakarta.validation.constraints.NotNull;
  * @param description descrição detalhada do ambiente
  * @param capacity    quantidade de lugares (mínimo 1)
  * @param block       bloco onde o ambiente fica
+ * @param imageUrl    URL da imagem do ambiente (opcional)
  *
  * @author Gerenciador de Ambientes UEPB
  * @since 1.0
@@ -34,5 +35,8 @@ public record SaveEnvironmentRequest(
 
     @NotEmpty(message = "Bloco é obrigatório")
     @Schema(description = "Bloco onde o ambiente fica", example = "Bloco A", requiredMode = Schema.RequiredMode.REQUIRED)
-    String block
+    String block,
+
+    @Schema(description = "URL da imagem do ambiente", example = "https://storage.example.com/lab03.jpg")
+    String imageUrl
 ) {}

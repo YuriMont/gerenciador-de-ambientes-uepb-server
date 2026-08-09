@@ -21,10 +21,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
  */
 @Schema(description = "Situação de um slot de 1 hora na agenda de um ambiente")
 public record SlotAvailabilityResponse(
-    @Schema(description = "Horário de início", example = "14:00")
+    @Schema(description = "Horário de início", example = "14:00", type = "string")
     LocalTime startTime,
 
-    @Schema(description = "Horário de fim", example = "15:00")
+    @Schema(description = "Horário de fim", example = "15:00", type = "string")
     LocalTime endTime,
 
     @Schema(description = "Situação do slot", example = "AVAILABLE")

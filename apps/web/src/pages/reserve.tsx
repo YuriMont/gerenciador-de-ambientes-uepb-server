@@ -12,9 +12,9 @@ import {
 import { useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { useEnvironment } from "@/api/environments";
-import { useAvailability, useCreateReserve } from "@/api/reserves";
-import type { SlotAvailability } from "@/api/types";
+import { useFindById } from "@/generated/api/environments/environments";
+import { useAvailability, useCreate } from "@/generated/api/reserves/reserves";
+import type { SlotAvailabilityResponse } from "@/generated/models/slotAvailabilityResponse";
 import { PageHeader } from "@/components/app-shell";
 import { Panel } from "@/components/panel";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -32,6 +32,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { apiErrorMessage } from "@/lib/api";
 import { addDays, formatLongDate, formatTime, toIsoDate } from "@/lib/format";
+import { useInvalidateReserves } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 const RULES = [
@@ -122,7 +123,7 @@ function SlotButton({
   isSelected,
   onToggle,
 }: {
-  slot: SlotAvailability;
+  slot: SlotAvailabilityResponse;
   isSelected: boolean;
   onToggle: () => void;
 }) {
@@ -134,7 +135,7 @@ function SlotButton({
         ? "encerrado"
         : isSelected
           ? "selecionado"
-          : `${formatTime(slot.startTime).slice(0, 2)}–${formatTime(slot.endTime).slice(0, 2)}h`;
+          : `${formatTime(slot.startTime ?? "").slice(0, 2)}–${formatTime(slot.endTime ?? "").slice(0, 2)}h`;
 
   return (
     <button
@@ -158,7 +159,7 @@ function SlotButton({
           "border-border bg-card text-foreground hover:border-primary/40 hover:bg-accent-soft",
       )}
     >
-      <span className="font-semibold">{formatTime(slot.startTime)}</span>
+      <span className="font-semibold">{formatTime(slot.startTime ?? "")}</span>
       <span className="text-[10px] opacity-80">{caption}</span>
     </button>
   );
@@ -174,16 +175,24 @@ export default function ReservePage() {
   const [justification, setJustification] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const { data: environment, isLoading: isLoadingEnvironment } =
-    useEnvironment(environmentId);
-  const { data: slots, isLoading: isLoadingSlots } = useAvailability(
-    environmentId,
-    date,
+  const invalidateReserves = useInvalidateReserves();
+  const { data: environmentResponse, isLoading: isLoadingEnvironment } =
+    useFindById(environmentId ?? "", {
+      query: { enabled: Boolean(environmentId) },
+    });
+  const { data: slotsResponse, isLoading: isLoadingSlots } = useAvailability(
+    environmentId ?? "",
+    { date },
+    { query: { enabled: Boolean(environmentId) } },
   );
-  const createReserve = useCreateReserve();
+  const createReserve = useCreate();
+
+  const environment = environmentResponse?.data;
+  const slots = slotsResponse?.data;
 
   const selectedSlots = useMemo(
-    () => (slots ?? []).filter((slot) => selected.includes(slot.startTime)),
+    () =>
+      (slots ?? []).filter((slot) => selected.includes(slot.startTime ?? "")),
     [selected, slots],
   );
 
@@ -232,17 +241,20 @@ export default function ReservePage() {
 
     createReserve.mutate(
       {
-        date,
-        environmentId: environmentId!,
-        numberOfParticipants,
-        justification: justification.trim(),
-        slots: selectedSlots.map((slot) => ({
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-        })),
+        data: {
+          date,
+          environmentId: environmentId!,
+          numberOfParticipants,
+          justification: justification.trim(),
+          slots: selectedSlots.map((slot) => ({
+            startTime: slot.startTime ?? "",
+            endTime: slot.endTime ?? "",
+          })),
+        },
       },
       {
         onSuccess: () => {
+          invalidateReserves();
           toast.success(
             "Solicitação enviada. Ela fica pendente até um administrador responder.",
           );
@@ -309,10 +321,10 @@ export default function ReservePage() {
                 <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
                   {(slots ?? []).map((slot) => (
                     <SlotButton
-                      key={slot.startTime}
+                      key={slot.startTime ?? ""}
                       slot={slot}
-                      isSelected={selected.includes(slot.startTime)}
-                      onToggle={() => toggleSlot(slot.startTime)}
+                      isSelected={selected.includes(slot.startTime ?? "")}
+                      onToggle={() => toggleSlot(slot.startTime ?? "")}
                     />
                   ))}
                 </div>
@@ -358,13 +370,13 @@ export default function ReservePage() {
                         <div className="flex flex-wrap gap-1.5">
                           {selectedSlots.map((slot) => (
                             <button
-                              key={slot.startTime}
+                              key={slot.startTime ?? ""}
                               type="button"
-                              onClick={() => toggleSlot(slot.startTime)}
+                              onClick={() => toggleSlot(slot.startTime ?? "")}
                               className="flex items-center gap-1 rounded-4xl bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent-strong hover:bg-accent-soft/70"
                             >
-                              {formatTime(slot.startTime)} –{" "}
-                              {formatTime(slot.endTime)}
+                              {formatTime(slot.startTime ?? "")} –{" "}
+                              {formatTime(slot.endTime ?? "")}
                               <X className="size-3" />
                             </button>
                           ))}

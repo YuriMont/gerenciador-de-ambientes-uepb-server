@@ -42,7 +42,10 @@ export function formatLongDate(date: string | Date): string {
 }
 
 /** "qua, 16 abr" */
-export function formatShortDate(date: string | Date): string {
+export function formatShortDate(
+  date: string | Date | null | undefined,
+): string {
+  if (!date) return "—";
   const value = typeof date === "string" ? parseIsoDate(date) : date;
   return value
     .toLocaleDateString(LOCALE, {
@@ -54,7 +57,9 @@ export function formatShortDate(date: string | Date): string {
 }
 
 /** "12 mar 2024" */
-export function formatDayMonthYear(date: string | Date | null): string {
+export function formatDayMonthYear(
+  date: string | Date | null | undefined,
+): string {
   if (!date) return "—";
   const value = typeof date === "string" ? new Date(date) : date;
   return value
@@ -67,8 +72,8 @@ export function formatDayMonthYear(date: string | Date | null): string {
 }
 
 /** Recorta `HH:mm:ss` para `HH:mm`. */
-export function formatTime(time: string): string {
-  return time.slice(0, 5);
+export function formatTime(time: string | undefined): string {
+  return (time ?? "00:00:00").slice(0, 5);
 }
 
 /** Iniciais do nome, para o avatar: "Maria Rodrigues" → "MR". */
@@ -97,16 +102,16 @@ export function greeting(now = new Date()): string {
  * Os slots são contíguos na prática, então basta o menor início e o maior fim.
  */
 export function formatSlotRange(
-  slots: { startTime: string; endTime: string }[],
+  slots?: { startTime?: string; endTime?: string }[],
 ): string {
-  if (slots.length === 0) return "—";
+  if (!slots || slots.length === 0) return "—";
   const start = slots.reduce(
-    (min, s) => (s.startTime < min ? s.startTime : min),
-    slots[0].startTime,
+    (min, s) => (s.startTime ?? min) < min ? s.startTime ?? min : min,
+    slots[0].startTime ?? "08:00:00",
   );
   const end = slots.reduce(
-    (max, s) => (s.endTime > max ? s.endTime : max),
-    slots[0].endTime,
+    (max, s) => (s.endTime ?? max) > max ? s.endTime ?? max : max,
+    slots[0].endTime ?? "09:00:00",
   );
   return `${formatTime(start)} – ${formatTime(end)}`;
 }
