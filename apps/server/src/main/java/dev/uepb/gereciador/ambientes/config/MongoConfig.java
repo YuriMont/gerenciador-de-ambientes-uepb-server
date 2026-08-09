@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 
@@ -33,11 +34,27 @@ public class MongoConfig {
     /**
      * Cria o bean {@link MongoClient} com base na URI de conexão configurada.
      *
+     * <p>Em URIs {@code mongodb+srv://} o TLS é ligado à força, ignorando um eventual
+     * {@code ssl=false} na URI. O Atlas só aceita conexões TLS e derruba o socket durante o
+     * handshake quando o cliente fala em texto puro, o que o driver reporta como
+     * {@code MongoSocketReadException: Prematurely reached end of stream} — um erro que não
+     * aponta para a causa. URIs {@code mongodb://} não são tocadas, para que Mongo local sem
+     * TLS continue funcionando.</p>
+     *
      * @return instância configurada do {@link MongoClient}
      */
     @Bean
     public MongoClient mongoClient() {
-        return MongoClients.create(connectionString);
+        MongoClientSettings settings = MongoClientSettings.builder()
+                .applyConnectionString(connectionString)
+                .applyToSslSettings(ssl -> {
+                    if (connectionString.isSrvProtocol()) {
+                        ssl.enabled(true);
+                    }
+                })
+                .build();
+
+        return MongoClients.create(settings);
     }
 
     /**
