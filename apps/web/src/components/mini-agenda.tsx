@@ -10,7 +10,7 @@ export function MiniAgenda({
   slots,
   className,
 }: {
-  slots: SlotAvailabilityResponse[];
+  slots: SlotAvailabilityResponse[] | undefined;
   className?: string;
 }) {
   return (
@@ -18,7 +18,7 @@ export function MiniAgenda({
       className={cn("flex h-8 items-end gap-1", className)}
       aria-hidden="true"
     >
-      {slots.map((slot) => (
+      {(slots ?? []).map((slot) => (
         <span
           key={slot.startTime}
           title={`${formatTime(slot.startTime ?? "")} – ${formatTime(slot.endTime ?? "")}`}

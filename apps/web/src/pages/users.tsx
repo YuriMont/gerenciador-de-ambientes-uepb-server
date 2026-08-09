@@ -185,8 +185,8 @@ export default function UsersPage() {
       const matchesRole = filter === "todos" || user.role === filter;
       const matchesSearch =
         term.length === 0 ||
-        user.name.toLocaleLowerCase("pt-BR").includes(term) ||
-        user.email.toLocaleLowerCase("pt-BR").includes(term);
+        (user.name ?? "").toLocaleLowerCase("pt-BR").includes(term) ||
+        (user.email ?? "").toLocaleLowerCase("pt-BR").includes(term);
       return matchesRole && matchesSearch;
     });
   }, [filter, search, users]);
