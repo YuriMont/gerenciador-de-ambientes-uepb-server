@@ -1,268 +1,191 @@
-# Gerenciador de Ambientes UEPB — Server
+# Gerenciador de Ambientes UEPB
 
-Backend da plataforma de **gerenciamento e reserva de ambientes físicos** da Universidade Estadual da Paraíba (UEPB). Permite que usuários solicitem a reserva de salas, laboratórios e outros espaços, com fluxo de aprovação por administradores.
+Plataforma de **gerenciamento e reserva de ambientes físicos** da Universidade Estadual da Paraíba (UEPB). Usuários solicitam salas, laboratórios e auditórios em slots de 1 hora; administradores aprovam ou recusam cada pedido.
 
----
+Monorepo com três partes: o **backend** (`apps/server/`), o **frontend** (`apps/web/`) e o **protótipo de interface** (`design/`).
 
-## 🚀 Tecnologias
+## Estado atual
 
-| Tecnologia          | Versão     | Finalidade                                       |
-| ------------------- | ---------- | ------------------------------------------------ |
-| Java                | 21         | Linguagem principal                              |
-| Spring Boot         | 4.x        | Framework web e IoC                              |
-| Spring Security     | (via Boot) | Autenticação e autorização                       |
-| Spring Data MongoDB | (via Boot) | Persistência de dados                            |
-| MongoDB             | 6+         | Banco de dados NoSQL                             |
-| Auth0 Java JWT      | 4.5.0      | Geração e validação de tokens JWT                |
-| SpringDoc OpenAPI   | 2.5.0      | Documentação interativa (Swagger UI)             |
-| Lombok              | (via Boot) | Redução de código boilerplate                    |
-| Hibernate Validator | (via Boot) | Validação de dados de entrada                    |
-| dotenv-java         | 3.0.0      | Carregamento de variáveis de ambiente via `.env` |
-| Maven               | 3.x        | Gerenciador de build e dependências              |
+| Parte | Situação |
+| ----- | -------- |
+| `apps/server/` | **Funcional.** Auth JWT, CRUD de ambientes, criação de reservas e consulta de disponibilidade. Ainda **não existe** endpoint para aprovar/recusar reserva — o status nasce `PENDING` e não há como mudá-lo pela API. |
+| `apps/web/` | **Esqueleto.** Vite + React + Tailwind + shadcn configurados, `lib/api.ts` (axios com interceptor de JWT) e `queryClient` prontos. Não há telas: `App.tsx` ainda é a página do template do Vite. |
+| `design/prototype.pen` | **Protótipo completo.** 14 telas (8 desktop + 6 mobile) e o design system, para servir de referência ao construir `apps/web`. |
 
----
+## Stack
 
-## 📐 Arquitetura
+| Camada   | Tecnologias                                                    |
+| -------- | -------------------------------------------------------------- |
+| Backend  | Java 21, Spring Boot 4.x, Spring Security, Spring Data MongoDB  |
+| Frontend | Vite 8, React 19, TypeScript 6, Tailwind CSS 4, shadcn/ui       |
+| Banco    | MongoDB 6+                                                      |
+| Auth     | JWT (Auth0 `java-jwt`, expiração 4 h) + BCrypt                  |
+| Docs API | SpringDoc / Swagger UI                                          |
+| Design   | Pencil (`.pen`)                                                 |
+| Deploy   | Docker + Render (backend)                                       |
 
-```
-src/
-└── main/
-    ├── java/dev/uepb/gereciador/ambientes/
-    │   ├── AmbientesApplication.java     # Classe principal
-    │   ├── config/                       # Configurações (Security, JWT, MongoDB, OpenAPI)
-    │   ├── controller/                   # Controllers REST (AuthController, EnvironmentController, ...)
-    │   ├── dto/                          # Data Transfer Objects (request e response)
-    │   ├── entity/                       # Entidades MongoDB (User, Environment, Reserve, Role)
-    │   ├── enums/                        # Enumerações (UserRole, ReserveStatus)
-    │   ├── repository/                   # Interfaces MongoRepository
-    │   ├── seeder/                       # Seeder de dados iniciais (roles)
-    │   └── service/                      # Lógica de negócio
-    └── resources/
-        ├── application.properties        # Configuração base
-        ├── application-dev.properties    # Configuração de desenvolvimento
-        └── application-test.properties   # Configuração de testes
-```
-
----
-
-## 🔐 Autenticação
-
-A API utiliza **JWT (JSON Web Token)** via o esquema Bearer. O token é obtido no endpoint `POST /auth/login` e deve ser enviado em todas as requisições protegidas no header:
+## Estrutura
 
 ```
-Authorization: Bearer {token}
+apps/
+├── server/                 # Backend Spring Boot + MongoDB
+│   ├── src/main/java/dev/uepb/gereciador/ambientes/
+│   │   ├── config/         # Security, JWT, CORS, Mongo, OpenAPI
+│   │   ├── controller/     # Auth, Environment, Reserve, Person
+│   │   ├── dto/            # request/ (grafado "resquest") e response/
+│   │   ├── entity/         # User, Role, Environment, Reserve
+│   │   ├── enums/          # UserRole, ReserveStatus
+│   │   ├── repository/     # MongoRepository
+│   │   ├── seeder/         # RoleSeeder (USER, ADMIN, OWNER)
+│   │   └── service/        # Regras de negócio
+│   ├── .env.example
+│   ├── Dockerfile          # Build multistage (JRE 21)
+│   └── client.http         # Requisições de exemplo (REST Client do VS Code)
+└── web/                    # Frontend Vite + React + TypeScript
+    ├── src/lib/            # api (axios+JWT), queryClient, utils
+    ├── src/components/ui/  # Componentes shadcn
+    └── orval.config.ts     # Geração do client a partir do OpenAPI
+
+design/prototype.pen        # Protótipo de UI (desktop + mobile) e design system
+graphify-out/               # Grafo de conhecimento do repositório
 ```
 
-O token expira em **4 horas** a partir da emissão.
+## Requisitos
 
-### Perfis de acesso
+- **JDK 21**
+- **Maven 3.x** (ou o wrapper `./mvnw`)
+- **Node.js >= 20**
+- **MongoDB 6+**, local ou Atlas
 
-| Perfil  | Permissões                                          |
-| ------- | --------------------------------------------------- |
-| `USER`  | Realizar e consultar reservas próprias              |
-| `ADMIN` | Gerenciar ambientes, listar todos os usuários       |
-| `OWNER` | Acesso total — incluindo criação de administradores |
+## Como rodar
 
-Os papéis são criados automaticamente pelo `RoleSeeder` na inicialização da aplicação.
-
----
-
-## 🗓️ Regras de Negócio — Reservas
-
-- Reservas só podem ser feitas para datas **presentes ou futuras**
-- Cada slot tem duração exata de **1 hora** e deve começar em **hora cheia** (ex.: 09:00, 14:00)
-- Horário de funcionamento permitido: **08:00 às 22:00**
-- Não é possível reservar horários já passados no dia atual
-- **Não pode haver sobreposição** de slots para o mesmo ambiente e data
-- O status inicial de toda reserva é `PENDING` (aguarda aprovação)
-
----
-
-## 📖 Documentação da API (Swagger UI)
-
-Com a aplicação em execução, acesse a documentação interativa em:
-
-> **http://localhost:8080/swagger-ui/index.html**
-
-A especificação OpenAPI (JSON) está disponível em:
-
-> **http://localhost:8080/v3/api-docs**
-
-### Endpoints disponíveis
-
-#### Autenticação (`/auth`)
-
-| Método | Rota             | Descrição                           | Acesso  |
-| ------ | ---------------- | ----------------------------------- | ------- |
-| `POST` | `/auth/login`    | Autentica e retorna token JWT       | Público |
-| `POST` | `/auth/register` | Registra novo usuário (perfil USER) | Público |
-
-#### Ambientes (`/environments`)
-
-| Método   | Rota                 | Descrição                  | Acesso      |
-| -------- | -------------------- | -------------------------- | ----------- |
-| `GET`    | `/environments`      | Lista todos os ambientes   | Autenticado |
-| `GET`    | `/environments/{id}` | Busca ambiente pelo ID     | Autenticado |
-| `POST`   | `/environments`      | Cria novo ambiente         | Autenticado |
-| `PUT`    | `/environments/{id}` | Atualiza um ambiente       | Autenticado |
-| `DELETE` | `/environments/{id}` | Deleta um ambiente pelo ID | Autenticado |
-
-#### Reservas (`/reserves`)
-
-| Método | Rota                              | Descrição                           | Acesso      |
-| ------ | --------------------------------- | ----------------------------------- | ----------- |
-| `POST` | `/reserves`                       | Cria nova reserva (status: PENDING) | Autenticado |
-| `GET`  | `/reserves/{environmentId}?date=` | Lista slots disponíveis por dia     | Autenticado |
-
-#### Usuários (`/person`)
-
-| Método | Rota                   | Descrição                    | Acesso        |
-| ------ | ---------------------- | ---------------------------- | ------------- |
-| `GET`  | `/person/me`           | Dados do usuário autenticado | Autenticado   |
-| `GET`  | `/person/list`         | Lista todos os usuários      | ADMIN / OWNER |
-| `POST` | `/person/create-admin` | Cria novo administrador      | OWNER         |
-
----
-
-## 🛠️ Como Executar
-
-### Pré-requisitos
-
-- **Java 21** (JDK)
-- **Maven** (ou use o wrapper `./mvnw` incluso)
-- **MongoDB** em execução local ou acesso a um cluster (ex.: [MongoDB Atlas](https://www.mongodb.com/atlas))
-
-### 1. Clonar o repositório
+### 1. Variáveis de ambiente
 
 ```bash
-git clone https://github.com/YuriMont/gerenciador-de-ambientes-uepb-server.git
-cd gerenciador-de-ambientes-uepb-server
+cp apps/server/.env.example apps/server/.env
+cp apps/web/.env.example    apps/web/.env
 ```
 
-### 2. Configurar variáveis de ambiente
-
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+`apps/server/.env`:
 
 ```env
-# URI de conexão com o MongoDB
-# Local:
+SECRET=chave-longa-aleatoria          # assinatura do JWT (obrigatória)
+API_SERVER_URL=http://localhost:8080  # URL exibida no Swagger
+APP_PROFILE=dev                       # dev | test
 MONGODB_URI=mongodb://localhost:27017/ambientes
-
-# MongoDB Atlas (produção):
-# MONGODB_URI=mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/ambientes
-
-# Chave secreta para assinatura dos tokens JWT (use uma string longa e aleatória)
-SECRET=sua-chave-secreta-super-segura-aqui
-
-# Perfil ativo da aplicação
-APP_PROFILE=dev
 ```
 
-> **⚠️ Atenção:** Nunca commite o arquivo `.env` com credenciais reais. Ele já está incluído no `.gitignore`.
+Com MongoDB rodando com `--auth`, inclua as credenciais: `mongodb://usuario:senha@localhost:27017/ambientes?authSource=admin`. Para Atlas, use `mongodb+srv://...`.
 
-### 3. Executar a aplicação
+Nenhum dos `.env` é commitado — ambos estão no `.gitignore`.
+
+### 2. Backend
 
 ```bash
-./mvnw spring-boot:run
+cd apps/server
+./mvnw spring-boot:run    # http://localhost:8080
 ```
 
-Ou com Maven instalado globalmente:
+O diretório de trabalho precisa ser `apps/server/` — é de lá que o `.env` é lido, tanto pelo `spring.config.import` quanto pelo `dotenv-java`.
+
+### 3. Frontend
 
 ```bash
-mvn spring-boot:run
+cd apps/web
+npm install
+npm run dev               # http://localhost:5173
 ```
 
-### 4. Executar os testes
+### 4. Os dois juntos
 
 ```bash
+npm install               # instala o concurrently na raiz
+npm run dev               # server (8080) + web (5173)
+npm run dev:server        # só o backend, com hot-reload via DevTools
+npm run dev:web           # só o frontend
+```
+
+### 5. Testes
+
+```bash
+cd apps/server
 ./mvnw test
 ```
 
-Os testes utilizam uma URI MongoDB configurada em `application-test.properties` (padrão: `mongodb://localhost:27017/ambientes_test`).
+`EnvironmentServiceTest` e `PersonServiceTest` são unitários com Mockito e rodam sem banco. `AmbientesApplicationTests` sobe o contexto Spring e **precisa** de um MongoDB acessível na URI de `application-test.properties`.
 
-### 5. Acessar a API
+## Autenticação
 
-A aplicação estará disponível em: **http://localhost:8080**
+Exceto `POST /auth/**` e as rotas do Swagger, todo endpoint exige `Authorization: Bearer {token}`. O token vem de `POST /auth/login` e expira em 4 horas. Os papéis são criados na inicialização pelo `RoleSeeder`.
 
----
+| Perfil  | Permissões pretendidas                        |
+| ------- | --------------------------------------------- |
+| `USER`  | Realizar e consultar as próprias reservas     |
+| `ADMIN` | Gerenciar ambientes e listar usuários         |
+| `OWNER` | Acesso total, incluindo criar administradores |
 
-## 🗂️ Coleções MongoDB
+> Esta tabela descreve a **intenção**. Hoje só `/person/**` tem checagem de papel — veja [Pontos de atenção](#pontos-de-atenção).
 
-| Coleção        | Entidade      | Descrição                             |
-| -------------- | ------------- | ------------------------------------- |
-| `users`        | `User`        | Usuários cadastrados                  |
-| `roles`        | `Role`        | Perfis de acesso (USER, ADMIN, OWNER) |
-| `environments` | `Environment` | Ambientes físicos disponíveis         |
-| `reserves`     | `Reserve`     | Reservas realizadas                   |
+## Regras de negócio (reservas)
 
----
+Aplicadas em `ReserveService`:
 
-## 🧪 Exemplo de uso rápido
+- Data **presente ou futura**.
+- Slots de **exatamente 1 hora**, começando em **hora cheia**.
+- Janela permitida: **08:00 – 22:00** (14 slots por dia).
+- No dia de hoje, horários que já passaram são recusados.
+- **Sem sobreposição** para o mesmo ambiente e data (conflito → `409`).
+- Status inicial sempre `PENDING`.
 
-### 1. Registrar usuário
+`GET /reserves/{environmentId}?date=` devolve os slots **livres** — os 14 possíveis menos os já reservados.
 
-```http
-POST /auth/register
-Content-Type: application/json
+## API
 
-{
-  "name": "João da Silva",
-  "email": "joao@uepb.edu.br",
-  "password": "senha@123"
-}
-```
+Com a aplicação no ar:
 
-### 2. Fazer login
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
 
-```http
-POST /auth/login
-Content-Type: application/json
+| Método | Rota | Acesso real (no código) |
+| ------ | ---- | ----------------------- |
+| `POST` | `/auth/login` | Público |
+| `POST` | `/auth/register` | Público (cria com perfil `USER`) |
+| `GET` | `/environments` | Autenticado |
+| `GET` | `/environments/{id}` | Autenticado |
+| `POST` | `/environments` | Autenticado ⚠️ |
+| `PUT` | `/environments/{id}` | Autenticado ⚠️ |
+| `DELETE` | `/environments/{id}` | Autenticado ⚠️ |
+| `POST` | `/reserves` | Autenticado |
+| `GET` | `/reserves/{environmentId}?date=YYYY-MM-DD` | Autenticado |
+| `GET` | `/person/me` | Autenticado |
+| `GET` | `/person/list` | `ADMIN` / `OWNER` |
+| `POST` | `/person/create-admin` | `OWNER` |
 
-{
-  "email": "joao@uepb.edu.br",
-  "password": "senha@123"
-}
-```
+Exemplos prontos para o REST Client do VS Code estão em `apps/server/client.http`.
 
-Resposta:
+## Design
 
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
+O protótipo de interface vive em `design/prototype.pen`, editável no [Pencil](https://pencil.dev). Ele é a referência visual para implementar `apps/web` e cobre:
 
-### 3. Criar reserva
+- **Desktop (1440×860):** Entrar, Início, Ambientes, Novo ambiente, Reservar ambiente, Minhas reservas, Aprovar reservas, Usuários.
+- **Mobile (390×844):** Entrar, Ambientes, Horários do ambiente, Revisar solicitação, Minhas reservas, Aprovar reservas.
+- **Design system:** tokens de cor, escala tipográfica (Inter), botões, campos, badges de `ReserveStatus` e `UserRole`, slots, cartões e navegação.
 
-```http
-POST /reserves
-Authorization: Bearer {token}
-Content-Type: application/json
+Os tokens do protótipo espelham o `apps/web/src/index.css` (base *neutral* do shadcn, Inter, raio de 10 px). O arquivo é binário/criptografado: abra com o Pencil, não com editor de texto.
 
-{
-  "date": "2026-04-15",
-  "environmentId": "664f1a2b3c4d5e6f7a8b9c0d",
-  "numberOfParticipants": 25,
-  "justification": "Aula prática de Redes de Computadores",
-  "slots": [
-    { "startTime": "09:00", "endTime": "10:00" },
-    { "startTime": "10:00", "endTime": "11:00" }
-  ]
-}
-```
+## Pontos de atenção
 
-### 4. Consultar slots disponíveis
+Três coisas que quebram na primeira tentativa se você não souber:
 
-```http
-GET /reserves/664f1a2b3c4d5e6f7a8b9c0d?date=2026-04-15
-Authorization: Bearer {token}
-```
+1. **`npm run generate:api` falha com 404.** O `orval.config.ts` busca `${API_URL}/openapi.json`, mas o SpringDoc publica em `/v3/api-docs`. Alinhe os dois — ou `springdoc.api-docs.path=/openapi.json` no `application.properties`, ou a URL no `orval.config.ts`.
+2. **`API_URL` não chega ao browser.** `src/lib/api.ts` lê `import.meta.env.API_URL`, mas o Vite só expõe variáveis com prefixo `VITE_`. O valor chega `undefined` e o axios cai em URL relativa. Renomeie para `VITE_API_URL` no `.env` e no `api.ts`. (No `orval.config.ts` é `process.env.API_URL`, lido pelo dotenv no Node — esse funciona.)
+3. **Qualquer usuário autenticado pode criar, editar e apagar ambientes.** O `EnvironmentController` não tem `@PreAuthorize`, então um `USER` consegue apagar um laboratório. Falta `@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_OWNER')")` nos métodos de escrita.
 
----
+Também vale saber: o CORS em `CorsConfig.java` libera `http://localhost:5173`, `http://localhost:3000` e a URL do Render. O pacote se chama `gereciador` e o diretório de DTOs de entrada `resquest` — dois typos históricos, mantidos de propósito para não quebrar imports.
 
-## 📝 Observações de desenvolvimento
+## Roadmap
 
-- O projeto usa o perfil `dev` por padrão. Configure `APP_PROFILE=test` para usar as propriedades de teste.
-- O `RoleSeeder` é executado na inicialização e garante que os papéis `USER`, `ADMIN` e `OWNER` existam no banco.
-- A auditoria automática de campos `createdAt` e `updatedAt` é habilitada via `@EnableMongoAuditing`.
-- O Spring Boot DevTools está incluído para hot-reload em desenvolvimento.
+- [ ] Endpoint de aprovação/recusa de reservas (`APPROVED` / `REJECTED`)
+- [ ] Telas do `apps/web` a partir do protótipo
+- [ ] Proteger a escrita em `/environments` por papel
+- [ ] CI/CD em `.github/workflows` com build e testes

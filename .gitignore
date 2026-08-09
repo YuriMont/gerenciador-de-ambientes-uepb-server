@@ -34,3 +34,5 @@ build/
 # client.http
 
 .env
+
+node_modules

@@ -1,0 +1,80 @@
+@baseUrl = http://localhost:8080
+@token = {{login.response.body.$.token}}
+@environmentId = {{createEnvironment.response.body.$.id}}
+
+###
+
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "password": "1234"
+}
+
+###
+
+# @name createEnvironment
+POST {{baseUrl}}/environments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Laboratório",
+  "description": "descvnfjvfh",
+  "capacity": 30,
+  "block": "Bloco B"
+}
+
+###
+
+GET {{baseUrl}}/environments
+Authorization: Bearer {{token}}
+
+###
+
+PUT {{baseUrl}}/environments/{{environmentId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Laboratório atualizado",
+  "description": "descvnfjvfh",
+  "capacity": 40,
+  "block": "Bloco B · Térreo"
+}
+
+###
+
+GET {{baseUrl}}/environments/{{environmentId}}
+Authorization: Bearer {{token}}
+
+###
+
+DELETE {{baseUrl}}/environments/{{environmentId}}
+Authorization: Bearer {{token}}
+
+###
+
+POST {{baseUrl}}/reserves
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "date": "2026-03-17",
+  "environmentId": "{{environmentId}}",
+  "justification": "descvnfjvfh",
+  "numberOfParticipants": 10,
+  "slots": [
+    {
+      "startTime": "08:00",
+      "endTime": "09:00"
+    }
+  ]
+}
+
+###
+
+GET {{baseUrl}}/reserves/{{environmentId}}?date=2026-03-17
+Authorization: Bearer {{token}}
